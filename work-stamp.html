@@ -1,0 +1,480 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>出退勤表(仮)</title>
+  <script src="https://accounts.google.com/gsi/client" async defer></script>
+  <style>
+    body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; padding: 15px; background-color: #f4f6f8; color: #333; max-width: 500px; margin: 0 auto; }
+    .card { background: white; padding: 20px; border-radius: 12px; box-shadow: 0 4px 12px rgba(0,0,0,0.08); margin-bottom: 20px; }
+    h2 { margin-top: 0; font-size: 18px; border-bottom: 2px solid #007bff; padding-bottom: 8px; color: #007bff; display: flex; justify-content: space-between; align-items: center; }
+    .status-badge { font-size: 12px; font-weight: normal; color: #28a745; }
+    .form-group { margin-bottom: 15px; }
+    label { font-weight: bold; display: block; margin-bottom: 5px; font-size: 14px; }
+    select, input { width: 100%; padding: 12px; font-size: 16px; border: 1px solid #ccc; border-radius: 6px; box-sizing: border-box; background-color: #fff; }
+    .btn { width: 100%; padding: 14px; font-size: 16px; font-weight: bold; border: none; border-radius: 6px; cursor: pointer; color: white; margin-top: 10px; box-sizing: border-box; text-decoration: none; display: inline-block; text-align: center; }
+    .btn-clockin { background-color: #28a745; width: 48%; }
+    .btn-clockout { background-color: #dc3545; width: 48%; }
+    .btn-group { display: flex; justify-content: space-between; }
+    .btn-admin { background-color: #6c757d; }
+    .btn-close { background-color: #dc3545; font-size: 12px; padding: 6px 12px; width: auto; margin-top: 0; }
+    .btn-action { background-color: #007bff; padding: 12px; width: 35%; margin-top: 0; white-space: nowrap; }
+    .btn-add { background-color: #28a745; padding: 12px; width: 35%; margin-top: 0; white-space: nowrap; }
+    .btn-del { background-color: #dc3545; padding: 6px 10px; font-size: 12px; margin-top: 0; width: auto; }
+    .btn-google { background-color: #4285F4; }
+    .btn-sheet { background-color: #28a745; }
+    .btn-reload { background-color: #17a2b8; }
+    .input-row { display: flex; gap: 8px; align-items: center; }
+    .input-row input { flex: 1; }
+    #msg { margin-top: 15px; font-weight: bold; text-align: center; }
+    .msg-success { color: #28a745; }
+    .msg-error { color: #dc3545; }
+    
+    /* 管理者画面スタイル */
+    .admin-card { border: 2px solid #007bff; }
+    .admin-header { display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid #007bff; padding-bottom: 8px; margin-bottom: 15px; }
+    .admin-header h2 { border: none; padding: 0; margin: 0; }
+    h3 { font-size: 15px; margin-top: 20px; margin-bottom: 10px; color: #007bff; border-bottom: 1px dashed #ccc; padding-bottom: 4px; }
+    .item-list { list-style: none; padding: 0; margin: 10px 0; }
+    .item-list li { display: flex; justify-content: space-between; align-items: center; padding: 8px; background: #f8f9fa; border: 1px solid #ddd; border-radius: 4px; margin-bottom: 6px; font-size: 14px; }
+    
+    /* テーブルスタイル */
+    .table-container { width: 100%; overflow-x: auto; margin-top: 10px; border: 1px solid #ddd; border-radius: 6px; max-height: 250px; }
+    table { width: 100%; border-collapse: collapse; font-size: 13px; text-align: left; }
+    th, td { padding: 8px 10px; border-bottom: 1px solid #ddd; white-space: nowrap; }
+    th { background-color: #f8f9fa; font-weight: bold; position: sticky; top: 0; z-index: 1; }
+    tr:nth-child(even) { background-color: #f9f9f9; }
+  </style>
+</head>
+<body>
+
+<!-- 記録用画面 (表側) -->
+<div class="card">
+  <h2>
+    <span id="appTitle">出退勤表(仮)</span>
+    <span class="status-badge" id="dbStatus">🟢 接続完了</span>
+  </h2>
+  
+  <div class="form-group">
+    <label>従業員を選択:</label>
+    <select id="staffSelect">
+      <option value="">選択してください</option>
+    </select>
+  </div>
+  
+  <div class="form-group">
+    <label>現場名を選択:</label>
+    <select id="siteSelect">
+      <option value="">選択してください</option>
+    </select>
+  </div>
+  
+  <div class="btn-group">
+    <button class="btn btn-clockin" onclick="handleRecord('出勤')">出勤</button>
+    <button class="btn btn-clockout" onclick="handleRecord('退勤')">退勤</button>
+  </div>
+  
+  <button class="btn btn-admin" style="margin-top: 20px;" onclick="openAdminModal()">🔒 管理者画面へ（ロック付）</button>
+  
+  <div id="msg"></div>
+</div>
+
+<!-- 管理者画面 (ロック付きエリア) -->
+<div class="card admin-card" id="adminSection" style="display: none;">
+  <div class="admin-header">
+    <h2>管理者画面</h2>
+    <button class="btn btn-close" onclick="closeAdmin()">🔒 管理者画面を閉じる</button>
+  </div>
+
+  <!-- 1つの表にまとめた出退勤・履歴一覧 -->
+  <h3 style="margin-top: 0;">出退勤・勤務履歴一覧</h3>
+  <div style="display: flex; gap: 8px; margin-bottom: 8px;">
+    <button class="btn btn-reload" style="margin-top:0; padding:8px 12px; font-size:12px;" onclick="loadLogs()">最新に更新</button>
+    <button class="btn btn-sheet" style="margin-top:0; padding:8px 12px; font-size:12px;" onclick="downloadCSV()">CSV出力</button>
+  </div>
+
+  <div class="table-container">
+    <table>
+      <thead>
+        <tr>
+          <th>名前</th>
+          <th>現場名</th>
+          <th>出勤時間</th>
+          <th>退勤時間</th>
+          <th>滞在時間</th>
+          <th>位置情報MAP</th>
+        </tr>
+      </thead>
+      <tbody id="unifiedTableBody">
+        <tr><td colspan="6" style="text-align:center;">データがありません</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <!-- Googleスプレッドシート連携 -->
+  <h3>Googleスプレッドシート連携</h3>
+  <div id="sheetLinkContainer">
+    <p style="font-size: 12px; color: #666; margin: 5px 0;">Googleアカウントと連携すると、スプレッドシートへ自動保存できます。</p>
+    <button class="btn btn-google" style="margin-top: 0;" onclick="handleAuth()">Google連携 / シート作成</button>
+  </div>
+
+  <!-- 基本設定 -->
+  <h3>基本設定</h3>
+  <div class="form-group">
+    <div class="input-row">
+      <input type="text" id="titleInput" value="出退勤表(仮)">
+      <button class="btn btn-action" onclick="saveTitle()">タイトル保存</button>
+    </div>
+  </div>
+  
+  <div class="form-group">
+    <div class="input-row">
+      <input type="password" id="passInput" placeholder="新しい暗証番号">
+      <button class="btn btn-action" onclick="savePassword()">パスワード変更</button>
+    </div>
+  </div>
+
+  <!-- 従業員管理 -->
+  <h3>従業員管理</h3>
+  <div class="form-group">
+    <div class="input-row">
+      <input type="text" id="newStaffInput" placeholder="新しい従業員名">
+      <button class="btn btn-add" onclick="addStaff()">追加</button>
+    </div>
+  </div>
+  <ul class="item-list" id="staffListUI"></ul>
+
+  <!-- 現場名管理 -->
+  <h3>現場名管理</h3>
+  <div class="form-group">
+    <div class="input-row">
+      <input type="text" id="newSiteInput" placeholder="新しい現場名">
+      <button class="btn btn-add" onclick="addSite()">追加</button>
+    </div>
+  </div>
+  <ul class="item-list" id="siteListUI"></ul>
+</div>
+
+<script>
+  const CLIENT_ID = '187634680365-27ldgjr5p208dtb2gcs7mp5dg34rgoc6.apps.googleusercontent.com';
+  const SCOPES = 'https://www.googleapis.com/auth/spreadsheets https://www.googleapis.com/auth/drive.file';
+  
+  let tokenClient;
+  let accessToken = localStorage.getItem('OAUTH_ACCESS_TOKEN') || null;
+  let spreadsheetId = localStorage.getItem('TARGET_SHEET_ID') || null;
+
+  let adminPassword = localStorage.getItem('ADMIN_PASSWORD') || '1234';
+  let appTitle = localStorage.getItem('APP_TITLE') || '出退勤表(仮)';
+  let staffList = JSON.parse(localStorage.getItem('STAFF_LIST')) || ['あいうえお', 'かきくけこ'];
+  let siteList = JSON.parse(localStorage.getItem('SITE_LIST')) || ['本部オフィス', 'とうきょう'];
+  let recordLogs = JSON.parse(localStorage.getItem('RECORD_LOGS')) || [];
+
+  window.onload = function() {
+    document.getElementById('appTitle').innerText = appTitle;
+    document.getElementById('titleInput').value = appTitle;
+    
+    renderDropdowns();
+    renderAdminLists();
+    renderUnifiedTable();
+    updateSheetUI();
+
+    tokenClient = google.accounts.oauth2.initTokenClient({
+      client_id: CLIENT_ID,
+      scope: SCOPES,
+      callback: async (response) => {
+        if (response.error) return alert('Google認証に失敗しました');
+        accessToken = response.access_token;
+        localStorage.setItem('OAUTH_ACCESS_TOKEN', accessToken);
+        if (!spreadsheetId) {
+          await createSpreadsheet();
+        } else {
+          updateSheetUI();
+        }
+      },
+    });
+  };
+
+  // 1つの表に「現在の勤務状況」と「過去の履歴」をあわせて描画する
+  function renderUnifiedTable() {
+    const tbody = document.getElementById('unifiedTableBody');
+    
+    // 1. まず全スタッフの「現在の勤務中データ」をリストアップ
+    let activeRows = [];
+    staffList.forEach(staffName => {
+      const lastLog = [...recordLogs].reverse().find(log => log.staff === staffName);
+      if (lastLog && lastLog.type === '出勤') {
+        let locationHtml = '-';
+        if (lastLog.lat && lastLog.lng) {
+          locationHtml = `<a href="https://maps.google.com/?q=${lastLog.lat},${lastLog.lng}" target="_blank" style="color:#007bff; text-decoration:underline;">📍 マップを開く</a>`;
+        } else if (lastLog.location) {
+          locationHtml = lastLog.location;
+        }
+
+        activeRows.push(`
+          <tr style="background-color: #e6f4ea;">
+            <td><strong>${staffName}</strong></td>
+            <td>${lastLog.site}</td>
+            <td>${lastLog.time}</td>
+            <td><span style="color:#28a745; font-weight:bold;">🟢 勤務中</span></td>
+            <td>0時間0分</td>
+            <td>${locationHtml}</td>
+          </tr>
+        `);
+      }
+    });
+
+    // 2. 過去の記録データ（退勤済み、または独立した履歴）
+    let historyRows = recordLogs.map(log => {
+      let locationHtml = '-';
+      if (log.lat && log.lng) {
+        locationHtml = `<a href="https://maps.google.com/?q=${log.lat},${log.lng}" target="_blank" style="color:#007bff; text-decoration:underline;">📍 マップを開く</a>`;
+      } else if (log.location) {
+        locationHtml = log.location;
+      }
+
+      const clockInTime = log.type === '出勤' ? log.time : (log.clockInTime || '-');
+      const clockOutTime = log.type === '退勤' ? log.time : (log.clockOutTime || '-');
+      const stayTime = log.stayTime || (log.type === '退勤' ? '計算済' : '0時間0分');
+
+      return `
+        <tr>
+          <td><strong>${log.staff}</strong></td>
+          <td>${log.site}</td>
+          <td>${clockInTime}</td>
+          <td>${clockOutTime}</td>
+          <td>${stayTime}</td>
+          <td>${locationHtml}</td>
+        </tr>
+      `;
+    }).reverse();
+
+    const combinedHtml = [...activeRows, ...historyRows].join('');
+    tbody.innerHTML = combinedHtml || '<tr><td colspan="6" style="text-align:center;">データがありません</td></tr>';
+  }
+
+  function renderDropdowns() {
+    const staffSelect = document.getElementById('staffSelect');
+    staffSelect.innerHTML = '<option value="">選択してください</option>';
+    staffList.forEach(name => {
+      const opt = document.createElement('option');
+      opt.value = name;
+      opt.innerText = name;
+      staffSelect.appendChild(opt);
+    });
+
+    const siteSelect = document.getElementById('siteSelect');
+    siteSelect.innerHTML = '<option value="">選択してください</option>';
+    siteList.forEach(site => {
+      const opt = document.createElement('option');
+      opt.value = site;
+      opt.innerText = site;
+      siteSelect.appendChild(opt);
+    });
+  }
+
+  function renderAdminLists() {
+    document.getElementById('staffListUI').innerHTML = staffList.map((name, idx) => `
+      <li><span>${name}</span><button class="btn btn-del" onclick="deleteStaff(${idx})">削除</button></li>
+    `).join('');
+
+    document.getElementById('siteListUI').innerHTML = siteList.map((site, idx) => `
+      <li><span>${site}</span><button class="btn btn-del" onclick="deleteSite(${idx})">削除</button></li>
+    `).join('');
+  }
+
+  function handleRecord(type) {
+    const staff = document.getElementById('staffSelect').value;
+    const site = document.getElementById('siteSelect').value;
+
+    if (!staff) return showMsg('従業員を選択してください', false);
+    if (!site) return showMsg('現場名を選択してください', false);
+
+    showMsg('📍 位置情報を取得中...', true);
+
+    if ("geolocation" in navigator) {
+      navigator.geolocation.getCurrentPosition(
+        (position) => {
+          const lat = position.coords.latitude;
+          const lng = position.coords.longitude;
+          saveRecordData(type, staff, site, lat, lng, `https://google.com/maps?q=${lat},${lng}`);
+        },
+        (error) => {
+          console.warn("位置情報の取得に失敗:", error.message);
+          saveRecordData(type, staff, site, null, null, '位置情報なし');
+        },
+        { enableHighAccuracy: true, timeout: 5000, maximumAge: 0 }
+      );
+    } else {
+      saveRecordData(type, staff, site, null, null, '位置情報非対応');
+    }
+  }
+
+  async function saveRecordData(type, staff, site, lat, lng, locationStr) {
+    const now = new Date();
+    const timeStr = `${now.getMonth()+1}/${now.getDate()} ${now.getHours().toString().padStart(2,'0')}:${now.getMinutes().toString().padStart(2,'0')}`;
+    
+    let clockInTime = timeStr;
+    let clockOutTime = '勤務中';
+    let stayTime = '0時間0分';
+
+    if (type === '退勤') {
+      const lastOpenLog = [...recordLogs].reverse().find(log => log.staff === staff && log.type === '出勤');
+      if (lastOpenLog) {
+        clockInTime = lastOpenLog.time;
+      }
+      clockOutTime = timeStr;
+      stayTime = '計算中';
+    }
+
+    const newRecord = { 
+      time: timeStr, 
+      staff: staff, 
+      type: type, 
+      site: site, 
+      clockInTime: clockInTime,
+      clockOutTime: clockOutTime,
+      stayTime: stayTime,
+      lat: lat, 
+      lng: lng,
+      location: locationStr 
+    };
+    
+    recordLogs.push(newRecord);
+    localStorage.setItem('RECORD_LOGS', JSON.stringify(recordLogs));
+    
+    renderUnifiedTable();
+    showMsg(`${staff}さん ${site}へ ${type}を記録しました (${now.getHours()}:${now.getMinutes().toString().padStart(2,'0')})`, true);
+
+    if (accessToken && spreadsheetId) {
+      try {
+        await fetch(`https://sheets.googleapis.com/v4/spreadsheets/${spreadsheetId}/values/Sheet1!A:F:append?valueInputOption=USER_ENTERED`, {
+          method: 'POST',
+          headers: { 'Authorization': `Bearer ${accessToken}`, 'Content-Type': 'application/json' },
+          body: JSON.stringify({ values: [[staff, site, clockInTime, clockOutTime, stayTime, locationStr]] })
+        });
+      } catch (e) {
+        console.log('スプレッドシート送信失敗');
+      }
+    }
+  }
+
+  function handleAuth() { tokenClient.requestAccessToken(); }
+
+  async function createSpreadsheet() {
+    try {
+      const res = await fetch('https://sheets.googleapis.com/v4/spreadsheets', {
+        method: 'POST',
+        headers: { 'Authorization': `Bearer ${accessToken}`, 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          properties: { title: '出退勤管理データ' },
+          sheets: [{ properties: { title: 'Sheet1' }, data: [{ rowData: [{ values: [
+            { userEnteredValue: { stringValue: '名前' } },
+            { userEnteredValue: { stringValue: '現場名' } },
+            { userEnteredValue: { stringValue: '出勤時間' } },
+            { userEnteredValue: { stringValue: '退勤時間' } },
+            { userEnteredValue: { stringValue: '滞在時間' } },
+            { userEnteredValue: { stringValue: '位置情報MAP' } }
+          ] }] }] }]
+        })
+      });
+      const data = await res.json();
+      spreadsheetId = data.spreadsheetId;
+      localStorage.setItem('TARGET_SHEET_ID', spreadsheetId);
+      updateSheetUI();
+    } catch (err) {
+      alert('スプレッドシート作成に失敗しました');
+    }
+  }
+
+  function updateSheetUI() {
+    if (spreadsheetId) {
+      document.getElementById('sheetLinkContainer').innerHTML = `
+        <a href="https://docs.google.com/spreadsheets/d/${spreadsheetId}" target="_blank" class="btn btn-sheet">
+          📊 スプレッドシートを開く
+        </a>
+      `;
+    }
+  }
+
+  function downloadCSV() {
+    if (recordLogs.length === 0) return alert('データがありません');
+    let csv = "\uFEFF名前,現場名,出勤時間,退勤時間,滞在時間,位置情報MAP\n";
+    recordLogs.forEach(r => {
+      const cIn = r.type === '出勤' ? r.time : (r.clockInTime || '');
+      const cOut = r.type === '退勤' ? r.time : '勤務中';
+      csv += `"${r.staff}","${r.site}","${cIn}","${cOut}","${r.stayTime || '0時間0分'}","${r.location || ''}"\n`;
+    });
+    const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+    const link = document.createElement("a");
+    link.href = URL.createObjectURL(blob);
+    link.download = `出退勤記録_${new Date().toISOString().slice(0,10)}.csv`;
+    link.click();
+  }
+
+  function loadLogs() { renderUnifiedTable(); }
+
+  function addStaff() {
+    const val = document.getElementById('newStaffInput').value.trim();
+    if (!val) return;
+    staffList.push(val);
+    localStorage.setItem('STAFF_LIST', JSON.stringify(staffList));
+    document.getElementById('newStaffInput').value = '';
+    renderDropdowns(); renderAdminLists(); renderUnifiedTable();
+  }
+  function deleteStaff(i) {
+    if (!confirm('削除しますか？')) return;
+    staffList.splice(i, 1);
+    localStorage.setItem('STAFF_LIST', JSON.stringify(staffList));
+    renderDropdowns(); renderAdminLists(); renderUnifiedTable();
+  }
+  function addSite() {
+    const val = document.getElementById('newSiteInput').value.trim();
+    if (!val) return;
+    siteList.push(val);
+    localStorage.setItem('SITE_LIST', JSON.stringify(siteList));
+    document.getElementById('newSiteInput').value = '';
+    renderDropdowns(); renderAdminLists();
+  }
+  function deleteSite(i) {
+    if (!confirm('削除しますか？')) return;
+    siteList.splice(i, 1);
+    localStorage.setItem('SITE_LIST', JSON.stringify(siteList));
+    renderDropdowns(); renderAdminLists();
+  }
+
+  function openAdminModal() {
+    const inputPass = prompt('暗証番号を入力してください:');
+    if (inputPass === adminPassword) {
+      document.getElementById('adminSection').style.display = 'block';
+      window.scrollTo({ top: document.body.scrollHeight, behavior: 'smooth' });
+    } else if (inputPass !== null) {
+      alert('暗証番号が違います');
+    }
+  }
+  function closeAdmin() { document.getElementById('adminSection').style.display = 'none'; }
+
+  function saveTitle() {
+    const val = document.getElementById('titleInput').value.trim();
+    if (!val) return;
+    appTitle = val;
+    localStorage.setItem('APP_TITLE', appTitle);
+    document.getElementById('appTitle').innerText = appTitle;
+    alert('タイトルを変更しました');
+  }
+  function savePassword() {
+    const val = document.getElementById('passInput').value.trim();
+    if (!val) return;
+    adminPassword = val;
+    localStorage.setItem('ADMIN_PASSWORD', adminPassword);
+    document.getElementById('passInput').value = '';
+    alert('暗証番号を変更しました');
+  }
+  function showMsg(txt, isSuccess) {
+    const el = document.getElementById('msg');
+    el.innerText = txt;
+    el.className = isSuccess ? 'msg-success' : 'msg-error';
+  }
+</script>
+</body>
+</html>
