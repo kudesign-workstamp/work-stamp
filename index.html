@@ -97,6 +97,8 @@
         .staff-list { list-style: none; padding: 0; margin: 0; }
         .staff-item { display: flex; justify-content: space-between; align-items: center; padding: 10px 0; border-bottom: 1px solid #f1f5f9; font-size: 14px; }
         .staff-item:last-child { border-bottom: none; }
+        .staff-info span { font-weight: bold; }
+        .staff-info small { display: block; color: var(--text-sub); font-size: 12px; }
 
         #msg { color: var(--primary); font-weight: bold; margin-top: 12px; text-align: center; font-size: 14px; min-height: 20px; }
         .sync-badge { font-size: 11px; background: #dcfce7; color: #166534; padding: 3px 8px; border-radius: 20px; font-weight: normal; }
@@ -121,7 +123,11 @@
       const db = getFirestore(app);
 
       let adminPin = "1234";
-      let staffMembers = ["山田 太郎", "佐藤 花子"];
+      // staffMembersはオブジェクトの配列に変更 [{name: "山田 太郎", pin: "0000"}, ...]
+      let staffMembers = [
+        { name: "山田 太郎", pin: "1111" },
+        { name: "佐藤 花子", pin: "2222" }
+      ];
       let siteMembers = ["現場A", "現場B"];
       let records = [];
       let appTitle = "出退勤表(仮)";
@@ -150,14 +156,22 @@
           const data = settingsSnap.data();
           adminPin = data.adminPin || "1234";
           appTitle = data.appTitle || "出退勤表(仮)";
-          staffMembers = data.staffMembers || ["山田 太郎", "佐藤 花子"];
           siteMembers = data.siteMembers || ["現場A", "現場B"];
+          
+          // 古い形式（文字列の配列）で保存されている場合の互換性対応
+          if (data.staffMembers && data.staffMembers.length > 0) {
+            if (typeof data.staffMembers[0] === 'string') {
+              staffMembers = data.staffMembers.map(name => ({ name: name, pin: "0000" }));
+            } else {
+              staffMembers = data.staffMembers;
+            }
+          }
         } else {
           await setDoc(settingsRef, {
             adminPin: "1234",
             appTitle: "出退勤表(仮)",
-            staffMembers: ["山田 太郎", "佐藤 花子"],
-            siteMembers: ["現場A", "現場B"]
+            staffMembers: staffMembers,
+            siteMembers: siteMembers
           });
         }
         updateUI();
@@ -198,7 +212,7 @@
         adminPin = newPin;
         await saveSettingsToFirestore();
         document.getElementById('inputNewPin').value = '';
-        alert("ロックナンバーを変更したアル！");
+        alert("管理者ロックナンバーを変更したアル！");
       };
 
       window.updateTitle = async function() {
@@ -210,7 +224,7 @@
       };
 
       function openAdminPage() {
-        const pin = prompt("ロックナンバーを入力するアル：");
+        const pin = prompt("管理者ロックナンバーを入力するアル：");
         if (pin === adminPin) {
           document.getElementById('adminPage').style.display = 'block';
         } else if (pin !== null) {
@@ -227,39 +241,51 @@
         if (!select) return;
         const currentVal = select.value;
         select.innerHTML = '';
-        staffMembers.forEach(function(name) {
+        staffMembers.forEach(function(staff) {
           const option = document.createElement('option');
-          option.value = name;
-          option.textContent = name;
+          option.value = staff.name;
+          option.textContent = staff.name;
           select.appendChild(option);
         });
-        if (staffMembers.includes(currentVal)) select.value = currentVal;
+        if (staffMembers.some(s => s.name === currentVal)) select.value = currentVal;
       }
 
       function renderStaffManagementList() {
         const list = document.getElementById('staffListDisplay');
         if (!list) return;
         list.innerHTML = '';
-        staffMembers.forEach(function(name, index) {
+        staffMembers.forEach(function(staff, index) {
           const li = document.createElement('li');
           li.className = 'staff-item';
-          li.innerHTML = '<span>' + name + '</span><button class="btn-delete" onclick="window.removeStaff(' + index + ')">削除</button>';
+          li.innerHTML = `
+            <div class="staff-info">
+              <span>${staff.name}</span>
+              <small>ロックナンバー: ${staff.pin}</small>
+            </div>
+            <button class="btn-delete" onclick="window.removeStaff(${index})">削除</button>
+          `;
           list.appendChild(li);
         });
       }
 
       window.addStaff = async function() {
-        const input = document.getElementById('newStaffName');
-        const name = input.value.trim();
-        if (!name) return alert("名前を入力するアル！");
-        if (staffMembers.indexOf(name) !== -1) return alert("もう登録されているアル！");
-        staffMembers.push(name);
+        const inputName = document.getElementById('newStaffName');
+        const inputPin = document.getElementById('newStaffPin');
+        const name = inputName.value.trim();
+        const pin = inputPin.value.trim();
+
+        if (!name) return alert("従業員名を入力するアル！");
+        if (!pin) return alert("従業員のロックナンバーを入力するアル！");
+        if (staffMembers.some(s => s.name === name)) return alert("もう登録されている名前アル！");
+
+        staffMembers.push({ name: name, pin: pin });
         await saveSettingsToFirestore();
-        input.value = '';
+        inputName.value = '';
+        inputPin.value = '';
       };
 
       window.removeStaff = async function(index) {
-        if (confirm("「" + staffMembers[index] + "」を削除するアルか？")) {
+        if (confirm("「" + staffMembers[index].name + "」を削除するアルか？")) {
           staffMembers.splice(index, 1);
           await saveSettingsToFirestore();
         }
@@ -324,9 +350,19 @@
       };
 
       function handleClock(type) {
-        const staff = document.getElementById('staffSelect').value;
-        if (!staff) return alert("従業員を選ぶアル！");
+        const staffName = document.getElementById('staffSelect').value;
+        if (!staffName) return alert("従業員を選ぶアル！");
         
+        // 従業員のロックナンバー認証チェック
+        const staffObj = staffMembers.find(s => s.name === staffName);
+        if (!staffObj) return alert("従業員データが見つからないアル！");
+
+        const enteredPin = prompt(`${staffName} さん、ロックナンバーを入力してください：`);
+        if (enteredPin === null) return; // キャンセルされた場合
+        if (enteredPin !== staffObj.pin) {
+          return alert("ロックナンバーが違うアル！本人以外は打刻できないよ！");
+        }
+
         let site = "";
         if (type === 'in') {
           site = document.getElementById('siteSelect').value;
@@ -341,7 +377,7 @@
         msgEl.innerText = "位置情報を取得中アル…";
 
         if (!navigator.geolocation) {
-          processClockAction(type, staff, site, "位置情報非対応");
+          processClockAction(type, staffName, site, "位置情報非対応");
           return;
         }
 
@@ -350,11 +386,11 @@
             const lat = position.coords.latitude;
             const lng = position.coords.longitude;
             const locationStr = `${lat.toFixed(5)}, ${lng.toFixed(5)}`;
-            processClockAction(type, staff, site, locationStr);
+            processClockAction(type, staffName, site, locationStr);
           },
           (error) => {
             console.warn("位置情報取得エラー: ", error.message);
-            processClockAction(type, staff, site, "取得失敗(許可拒否等)");
+            processClockAction(type, staffName, site, "取得失敗(許可拒否等)");
           },
           { timeout: 10000, enableHighAccuracy: true }
         );
@@ -487,7 +523,7 @@
       </div>
       
       <div class="form-group-flex">
-        <input type="password" id="inputNewPin" placeholder="新しいロックナンバー">
+        <input type="password" id="inputNewPin" placeholder="新しい管理者ロックナンバー">
         <button class="btn-add" id="btnUpdatePin">変更</button>
       </div>
 
@@ -517,11 +553,12 @@
 
       <hr style="margin: 20px 0; border: 0; border-top: 1px solid #e2e8f0;">
 
-      <h3>従業員名簿の編集</h3>
-      <div class="form-group-flex">
-        <input type="text" id="newStaffName" placeholder="新しい従業員名">
-        <button class="btn-add" id="btnAddStaff">追加</button>
+      <h3>従業員名簿の編集（ロックナンバー設定）</h3>
+      <div class="form-group" style="margin-bottom: 8px;">
+        <input type="text" id="newStaffName" placeholder="新しい従業員名" style="margin-bottom: 8px;">
+        <input type="text" id="newStaffPin" placeholder="従業員用ロックナンバー（例: 1234）">
       </div>
+      <button class="btn-add" id="btnAddStaff" style="width: 100%; margin-bottom: 12px; padding: 12px;">従業員を追加</button>
       <ul id="staffListDisplay" class="staff-list"></ul>
 
       <h3>現場一覧の編集</h3>
