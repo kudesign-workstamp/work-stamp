@@ -462,7 +462,22 @@
 
       function sendNotificationEmail(toEmail, data) {
         console.log(`[通知送信] 宛先: ${toEmail}`, data);
-        // ここにEmailJSなどの送信処理を組み込むことができます
+
+        // EmailJSを使った実際の送信処理 (Service ID と Template ID を設定済)
+        emailjs.send('service_dis5gyi', 'template_p2ghsr8', {
+          to_email: toEmail,
+          staff_name: data.staff,
+          action_type: data.type,
+          site_name: data.site,
+          time: data.time,
+          location: data.location
+        })
+        .then(() => {
+          console.log('通知メール送信成功！');
+        }, (err) => {
+          console.error('通知メール送信失敗:', err);
+          alert('打刻は完了したけど、メール送信に失敗したアル…設定を確認してね！');
+        });
       }
 
       function renderTable() {
@@ -533,6 +548,16 @@
         a.download = 'attendance.csv';
         a.click();
       }
+    </script>
+
+    <!-- EmailJSのSDK読み込み ＆ Public Keyの設定 -->
+    <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/@emailjs/browser@4/dist/email.min.js"></script>
+    <script type="text/javascript">
+       (function(){
+          emailjs.init({
+            publicKey: "4mrUhBzvODskfQRxz",
+          });
+       })();
     </script>
 </head>
 <body>
