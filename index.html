@@ -82,6 +82,7 @@
         .btn-end { background-color: var(--danger); flex: 1; }
         .btn-add { background-color: var(--primary); white-space: nowrap; padding: 0 16px; }
         .btn-csv { background-color: #0891b2; width: 100%; font-size: 15px; }
+        .btn-clear-all { background-color: #991b1b; width: 100%; font-size: 15px; margin-top: 8px; }
         .btn-lock { background-color: #475569; width: 100%; font-size: 14px; margin-top: 12px; }
         .btn-delete { background-color: var(--danger); padding: 6px 10px; font-size: 11px; border-radius: 6px; box-shadow: none; }
 
@@ -139,6 +140,7 @@
         document.getElementById('btnAddStaff').onclick = addStaff;
         document.getElementById('btnAddSite').onclick = addSite;
         document.getElementById('btnExportCSV').onclick = exportToCSV;
+        document.getElementById('btnClearAllRecords').onclick = clearAllRecords;
         
         document.getElementById('btnOpenAdmin').onclick = openAdminPage;
         document.getElementById('btnCloseAdmin').onclick = closeAdminPage;
@@ -399,7 +401,6 @@
         const minutes = String(now.getMinutes()).padStart(2, '0');
         const seconds = String(now.getSeconds()).padStart(2, '0');
         
-        // 月日と時間を合わせたフォーマット（例: 09/09 12:34:56）
         const dateTimeStr = `${month}/${day} ${hours}:${minutes}:${seconds}`;
         
         if (type === 'in') {
@@ -473,6 +474,20 @@
         }
       };
 
+      async function clearAllRecords() {
+        if (records.length === 0) return alert("削除するデータがないアル！");
+        if (confirm("【警告】すべての打刻データを一括削除するアルか？この操作は元に戻せないよ！")) {
+          try {
+            const deletePromises = records.map(r => deleteDoc(doc(db, "records", r.id)));
+            await Promise.all(deletePromises);
+            alert("すべての打刻データを一括削除したアル！");
+          } catch (error) {
+            console.error("一括削除エラー: ", error);
+            alert("削除中にエラーが発生したアル。");
+          }
+        }
+      }
+
       function exportToCSV() {
         if (records.length === 0) return alert("出力するデータがないアル！");
         let csv = '名前,現場名,出勤日時,状態,出勤位置,退勤日時,退勤位置\n';
@@ -531,9 +546,10 @@
 
       <hr style="margin: 20px 0; border: 0; border-top: 1px solid #e2e8f0;">
 
-      <h3>打刻データ一覧・出力</h3>
+      <h3>打刻データ一覧・一括操作</h3>
       <div style="margin-bottom: 12px;">
         <button class="btn-csv" id="btnExportCSV">CSV出力</button>
+        <button class="btn-clear-all" id="btnClearAllRecords">⚠️ 打刻データを全削除</button>
       </div>
       <div class="table-container">
         <table>
