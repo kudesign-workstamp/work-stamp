@@ -86,8 +86,8 @@
         .btn-delete { background-color: var(--danger); padding: 6px 10px; font-size: 11px; border-radius: 6px; box-shadow: none; }
 
         .table-container { overflow-x: auto; border-radius: 8px; border: 1px solid var(--border); }
-        table { width: 100%; border-collapse: collapse; min-width: 550px; background: #fff; }
-        th, td { border-bottom: 1px solid #e2e8f0; padding: 10px 8px; text-align: left; font-size: 13px; }
+        table { width: 100%; border-collapse: collapse; min-width: 600px; background: #fff; }
+        th, td { border-bottom: 1px solid #e2e8f0; padding: 10px 8px; text-align: left; font-size: 13px; white-space: nowrap; }
         th { background-color: #f1f5f9; color: var(--text-sub); font-weight: 600; }
         tr:last-child td { border-bottom: none; }
 
@@ -393,20 +393,27 @@
 
       async function processClockAction(type, staff, site, locationStr) {
         const now = new Date();
-        const timeStr = `${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}:${String(now.getSeconds()).padStart(2, '0')}`;
+        const month = String(now.getMonth() + 1).padStart(2, '0');
+        const day = String(now.getDate()).padStart(2, '0');
+        const hours = String(now.getHours()).padStart(2, '0');
+        const minutes = String(now.getMinutes()).padStart(2, '0');
+        const seconds = String(now.getSeconds()).padStart(2, '0');
+        
+        // 月日と時間を合わせたフォーマット（例: 09/09 12:34:56）
+        const dateTimeStr = `${month}/${day} ${hours}:${minutes}:${seconds}`;
         
         if (type === 'in') {
           await addDoc(collection(db, "records"), {
             staff: staff,
             site: site,
-            clockIn: timeStr,
+            clockIn: dateTimeStr,
             clockInLoc: locationStr,
             clockOut: "-",
             clockOutLoc: "-",
             status: "勤務中",
             timestamp: Date.now()
           });
-          document.getElementById('msg').innerText = `${staff} さん、出勤打刻したアル！ (${timeStr})`;
+          document.getElementById('msg').innerText = `${staff} さん、出勤打刻したアル！ (${dateTimeStr})`;
         } else {
           const target = records.find(r => r.staff === staff && r.status === "勤務中");
           if (!target) {
@@ -416,12 +423,12 @@
 
           const recordRef = doc(db, "records", target.id);
           await updateDoc(recordRef, {
-            clockOut: timeStr,
+            clockOut: dateTimeStr,
             clockOutLoc: locationStr,
             status: "退勤済み"
           });
           
-          document.getElementById('msg').innerText = `${staff} さん、退勤打刻したアル！ (${timeStr})`;
+          document.getElementById('msg').innerText = `${staff} さん、退勤打刻したアル！ (${dateTimeStr})`;
         }
       }
 
@@ -468,7 +475,7 @@
 
       function exportToCSV() {
         if (records.length === 0) return alert("出力するデータがないアル！");
-        let csv = '名前,現場名,出勤時刻,状態,出勤位置,退勤時刻,退勤位置\n';
+        let csv = '名前,現場名,出勤日時,状態,出勤位置,退勤日時,退勤位置\n';
         records.forEach(r => {
           csv += `"${r.staff}","${r.site}","${r.clockIn}","${r.status}","${r.clockInLoc || '-'}","${r.clockOut}","${r.clockOutLoc || '-'}"\n`;
         });
@@ -502,7 +509,6 @@
       <p id="msg"></p>
       
       <hr style="margin-top: 24px; border: 0; border-top: 1px solid #e2e8f0;">
-      <!-- 「（ロック付）」の文字を削除してスッキリさせたアル！ -->
       <button class="btn-lock" id="btnOpenAdmin">🔒 管理者画面へ</button>
     </div>
 
@@ -535,10 +541,10 @@
             <tr>
               <th>名前</th>
               <th>現場名</th>
-              <th>出勤</th>
+              <th>出勤日時</th>
               <th>状態</th>
               <th>出勤位置</th>
-              <th>退勤</th>
+              <th>退勤日時</th>
               <th>退勤位置</th>
               <th>操作</th>
             </tr>
