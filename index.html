@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title id="app-title-tag">出退勤表(仮)</title>
+    <title>出退勤表(仮)</title>
     <style>
         :root {
             --primary: #2563eb;
@@ -16,416 +16,527 @@
             --text-sub: #64748b;
             --border: #cbd5e1;
         }
-        body {
-            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-            padding: 12px;
-            background-color: var(--bg-color);
-            color: var(--text-main);
-            margin: 0;
+
+        body { 
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; 
+            padding: 12px; 
+            background-color: var(--bg-color); 
+            color: var(--text-main); 
+            margin: 0; 
             -webkit-tap-highlight-color: transparent;
         }
-        .card {
-            background: var(--card-bg);
-            padding: 16px;
-            border-radius: 12px;
-            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -2px rgba(0, 0, 0, 0.05);
-            margin-bottom: 16px;
+
+        .card { 
+            background: var(--card-bg); 
+            padding: 16px; 
+            border-radius: 12px; 
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -2px rgba(0, 0, 0, 0.05); 
+            margin-bottom: 16px; 
         }
-        h2 {
-            margin-top: 0;
-            color: var(--primary);
-            font-size: 18px;
-            border-bottom: 2px solid #e2e8f0;
-            padding-bottom: 8px;
+
+        h2 { 
+            margin-top: 0; 
+            color: var(--primary); 
+            font-size: 18px; 
+            border-bottom: 2px solid #e2e8f0; 
+            padding-bottom: 8px; 
             display: flex;
             justify-content: space-between;
             align-items: center;
         }
+
         h3 { font-size: 15px; color: var(--text-sub); margin-bottom: 8px; margin-top: 20px; }
+
         .form-group { margin-bottom: 14px; }
+        .form-group-flex { display: flex; gap: 8px; margin-bottom: 10px; }
+
         label { font-weight: 600; display: block; margin-bottom: 6px; font-size: 13px; color: var(--text-sub); }
-        select, input {
-            width: 100%;
-            padding: 12px;
-            font-size: 16px;
-            border: 1px solid var(--border);
-            border-radius: 8px;
-            box-sizing: border-box;
+
+        select, input { 
+            width: 100%; 
+            padding: 12px; 
+            font-size: 16px; 
+            border: 1px solid var(--border); 
+            border-radius: 8px; 
+            box-sizing: border-box; 
             background-color: #fff;
             color: var(--text-main);
         }
-        .btn-row { display: flex; gap: 10px; margin-top: 16px; }
-        button {
-            flex: 1;
-            padding: 14px;
-            font-size: 16px;
-            font-weight: bold;
-            border: none;
-            border-radius: 8px;
-            cursor: pointer;
-            color: #fff;
+
+        .btn-group { display: flex; gap: 10px; margin-top: 18px; }
+
+        button { 
+            padding: 14px; 
+            font-size: 16px; 
+            font-weight: bold; 
+            border: none; 
+            border-radius: 8px; 
+            cursor: pointer; 
+            color: white; 
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            transition: opacity 0.2s;
         }
-        .btn-in { background-color: var(--success); }
-        .btn-out { background-color: var(--danger); }
-        .btn-primary { background-color: var(--primary); }
-        .btn-secondary { background-color: #475569; }
-        .btn-danger { background-color: var(--danger); }
-        
-        .sync-badge {
-            font-size: 11px;
-            padding: 4px 8px;
-            border-radius: 12px;
-            background: #dcfce7;
-            color: #166534;
-            font-weight: normal;
-        }
-        
-        .admin-toggle-btn {
-            width: 100%;
-            background-color: #334155;
-            color: white;
-            padding: 12px;
-            border-radius: 8px;
-            border: none;
-            font-size: 15px;
-            font-weight: bold;
-            margin-top: 10px;
-        }
-        
-        table {
-            width: 100%;
-            border-collapse: collapse;
-            font-size: 13px;
-            margin-top: 8px;
-        }
-        th, td {
-            border: 1px solid #e2e8f0;
-            padding: 8px;
-            text-align: left;
-        }
-        th { background-color: #f1f5f9; }
-        .list-item {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            padding: 8px 0;
-            border-bottom: 1px solid #f1f5f9;
-        }
-        .location-info {
-            font-size: 12px;
-            color: var(--text-sub);
-            margin-top: 6px;
-        }
+        button:active { opacity: 0.8; }
+
+        .btn-start { background-color: var(--success); flex: 1; }
+        .btn-end { background-color: var(--danger); flex: 1; }
+        .btn-add { background-color: var(--primary); white-space: nowrap; padding: 0 16px; }
+        .btn-csv { background-color: #0891b2; width: 100%; font-size: 15px; }
+        .btn-lock { background-color: #475569; width: 100%; font-size: 14px; margin-top: 12px; }
+        .btn-delete { background-color: var(--danger); padding: 6px 10px; font-size: 11px; border-radius: 6px; box-shadow: none; }
+
+        .table-container { overflow-x: auto; border-radius: 8px; border: 1px solid var(--border); }
+        table { width: 100%; border-collapse: collapse; min-width: 550px; background: #fff; }
+        th, td { border-bottom: 1px solid #e2e8f0; padding: 10px 8px; text-align: left; font-size: 13px; }
+        th { background-color: #f1f5f9; color: var(--text-sub); font-weight: 600; }
+        tr:last-child td { border-bottom: none; }
+
+        .badge-working { background: #dcfce7; color: #166534; padding: 4px 8px; border-radius: 6px; font-weight: bold; font-size: 12px; display: inline-block; }
+        .badge-done { background: #f1f5f9; color: #475569; padding: 4px 8px; border-radius: 6px; font-weight: bold; font-size: 12px; display: inline-block; }
+
+        .staff-list { list-style: none; padding: 0; margin: 0; }
+        .staff-item { display: flex; justify-content: space-between; align-items: center; padding: 10px 0; border-bottom: 1px solid #f1f5f9; font-size: 14px; }
+        .staff-item:last-child { border-bottom: none; }
+
+        #msg { color: var(--primary); font-weight: bold; margin-top: 12px; text-align: center; font-size: 14px; min-height: 20px; }
+        .sync-badge { font-size: 11px; background: #dcfce7; color: #166534; padding: 3px 8px; border-radius: 20px; font-weight: normal; }
+        .map-link { color: var(--primary); text-decoration: underline; font-size: 12px; }
     </style>
+
+    <!-- Firebase SDKの読み込み -->
+    <script type="module">
+      import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
+      import { getFirestore, collection, addDoc, getDocs, deleteDoc, doc, updateDoc, onSnapshot, setDoc, getDoc } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+
+      const firebaseConfig = {
+        apiKey: "AIzaSyDxVOTA6qpXn4_mPWyiqvI...", // 念のためあなたの設定をそのまま埋め込んでいます
+        authDomain: "work-stamp-app.firebaseapp.com",
+        projectId: "work-stamp-app",
+        storageBucket: "work-stamp-app.firebasestorage.app",
+        messagingSenderId: "978728365973",
+        appId: "1:978728365973:web:10c006305a417551061972"
+      };
+
+      const app = initializeApp(firebaseConfig);
+      const db = getFirestore(app);
+
+      let adminPin = "1234";
+      let staffMembers = ["山田 太郎", "佐藤 花子"];
+      let siteMembers = ["現場A", "現場B"];
+      let records = [];
+      let appTitle = "出退勤表(仮)";
+
+      window.onload = function() {
+        initFirebaseData();
+
+        document.getElementById('btnClockIn').onclick = () => handleClock('in');
+        document.getElementById('btnClockOut').onclick = () => handleClock('out');
+        document.getElementById('btnAddStaff').onclick = addStaff;
+        document.getElementById('btnAddSite').onclick = addSite;
+        document.getElementById('btnExportCSV').onclick = exportToCSV;
+        
+        document.getElementById('btnOpenAdmin').onclick = openAdminPage;
+        document.getElementById('btnCloseAdmin').onclick = closeAdminPage;
+        
+        document.getElementById('btnUpdateTitle').onclick = updateTitle;
+        document.getElementById('btnUpdatePin').onclick = updatePin;
+      };
+
+      // Firestoreからリアルタイムでデータを同期・取得
+      async function initFirebaseData() {
+        // 設定データ（タイトル・PIN）の取得
+        const settingsRef = doc(db, "settings", "config");
+        const settingsSnap = await getDoc(settingsRef);
+        if (settingsSnap.exists()) {
+          const data = settingsSnap.data();
+          adminPin = data.adminPin || "1234";
+          appTitle = data.appTitle || "出退勤表(仮)";
+          staffMembers = data.staffMembers || ["山田 太郎", "佐藤 花子"];
+          siteMembers = data.siteMembers || ["現場A", "現場B"];
+        } else {
+          // 初期データ登録
+          await setDoc(settingsRef, {
+            adminPin: "1234",
+            appTitle: "出退勤表(仮)",
+            staffMembers: ["山田 太郎", "佐藤 花子"],
+            siteMembers: ["現場A", "現場B"]
+          });
+        }
+        updateUI();
+
+        // 記録データのリアルタイム監視 (onSnapshot)
+        onSnapshot(collection(db, "records"), (snapshot) => {
+          records = [];
+          snapshot.forEach((docSnap) => {
+            records.push({ id: docSnap.id, ...docSnap.data() });
+          });
+          // 日時順などに並び替え（必要に応じて）
+          renderTable();
+        });
+      }
+
+      async function saveSettingsToFirestore() {
+        const settingsRef = doc(db, "settings", "config");
+        await setDoc(settingsRef, {
+          adminPin: adminPin,
+          appTitle: appTitle,
+          staffMembers: staffMembers,
+          siteMembers: siteMembers
+        });
+        updateUI();
+      }
+
+      function updateUI() {
+        document.getElementById('appTitleDisplay').childNodes[0].nodeValue = appTitle + " ";
+        document.getElementById('inputAppTitle').value = appTitle;
+        renderStaffOptions();
+        renderStaffManagementList();
+        renderSiteOptions();
+        renderSiteManagementList();
+      }
+
+      window.updatePin = async function() {
+        const newPin = document.getElementById('inputNewPin').value.trim();
+        if (!newPin) return alert("新しいロックナンバーを入力するアル！");
+        adminPin = newPin;
+        await saveSettingsToFirestore();
+        document.getElementById('inputNewPin').value = '';
+        alert("ロックナンバーを変更したアル！");
+      };
+
+      window.updateTitle = async function() {
+        const newTitle = document.getElementById('inputAppTitle').value.trim();
+        if (!newTitle) return alert("タイトルを入力するアル！");
+        appTitle = newTitle;
+        await saveSettingsToFirestore();
+        alert("タイトルを変更したアル！");
+      };
+
+      function openAdminPage() {
+        const pin = prompt("ロックナンバーを入力するアル：");
+        if (pin === adminPin) {
+          document.getElementById('adminPage').style.display = 'block';
+        } else if (pin !== null) {
+          alert("ロックナンバーが違うアル！");
+        }
+      }
+
+      function closeAdminPage() {
+        document.getElementById('adminPage').style.display = 'none';
+      }
+
+      function renderStaffOptions() {
+        const select = document.getElementById('staffSelect');
+        if (!select) return;
+        const currentVal = select.value;
+        select.innerHTML = '';
+        staffMembers.forEach(function(name) {
+          const option = document.createElement('option');
+          option.value = name;
+          option.textContent = name;
+          select.appendChild(option);
+        });
+        if (staffMembers.includes(currentVal)) select.value = currentVal;
+      }
+
+      function renderStaffManagementList() {
+        const list = document.getElementById('staffListDisplay');
+        if (!list) return;
+        list.innerHTML = '';
+        staffMembers.forEach(function(name, index) {
+          const li = document.createElement('li');
+          li.className = 'staff-item';
+          li.innerHTML = '<span>' + name + '</span><button class="btn-delete" onclick="window.removeStaff(' + index + ')">削除</button>';
+          list.appendChild(li);
+        });
+      }
+
+      window.addStaff = async function() {
+        const input = document.getElementById('newStaffName');
+        const name = input.value.trim();
+        if (!name) return alert("名前を入力するアル！");
+        if (staffMembers.indexOf(name) !== -1) return alert("もう登録されているアル！");
+        staffMembers.push(name);
+        await saveSettingsToFirestore();
+        input.value = '';
+      };
+
+      window.removeStaff = async function(index) {
+        if (confirm("「" + staffMembers[index] + "」を削除するアルか？")) {
+          staffMembers.splice(index, 1);
+          await saveSettingsToFirestore();
+        }
+      };
+
+      function renderSiteOptions() {
+        const select = document.getElementById('siteSelect');
+        if (!select) return;
+        const currentVal = select.value;
+        select.innerHTML = '';
+        siteMembers.forEach(function(site) {
+          const option = document.createElement('option');
+          option.value = site;
+          option.textContent = site;
+          select.appendChild(option);
+        });
+        const customOption = document.createElement('option');
+        customOption.value = "__OTHER__";
+        customOption.textContent = "【直接入力する】";
+        select.appendChild(customOption);
+        if (siteMembers.includes(currentVal) || currentVal === "__OTHER__") select.value = currentVal;
+        window.toggleSiteInput();
+      }
+
+      function renderSiteManagementList() {
+        const list = document.getElementById('siteListDisplay');
+        if (!list) return;
+        list.innerHTML = '';
+        siteMembers.forEach(function(site, index) {
+          const li = document.createElement('li');
+          li.className = 'staff-item';
+          li.innerHTML = '<span>' + site + '</span><button class="btn-delete" onclick="window.removeSite(' + index + ')">削除</button>';
+          list.appendChild(li);
+        });
+      }
+
+      window.toggleSiteInput = function() {
+        const select = document.getElementById('siteSelect');
+        const customInput = document.getElementById('customSiteName');
+        if (select.value === "__OTHER__") {
+          customInput.style.display = "block";
+        } else {
+          customInput.style.display = "none";
+        }
+      };
+
+      window.addSite = async function() {
+        const input = document.getElementById('newSiteName');
+        const site = input.value.trim();
+        if (!site) return alert("現場名を入力するアル！");
+        if (siteMembers.indexOf(site) !== -1) return alert("もう登録されているアル！");
+        siteMembers.push(site);
+        await saveSettingsToFirestore();
+        input.value = '';
+      };
+
+      window.removeSite = async function(index) {
+        if (confirm("「" + siteMembers[index] + "」を削除するアルか？")) {
+          siteMembers.splice(index, 1);
+          await saveSettingsToFirestore();
+        }
+      };
+
+      function handleClock(type) {
+        const staff = document.getElementById('staffSelect').value;
+        if (!staff) return alert("従業員を選ぶアル！");
+        
+        let site = "";
+        if (type === 'in') {
+          site = document.getElementById('siteSelect').value;
+          if (site === "__OTHER__") {
+            site = document.getElementById('customSiteName').value.trim();
+            if (!site) return alert("現場名を入力するアル！");
+          }
+          if (!site) return alert("現場名を選ぶか入力するアル！");
+        }
+
+        const msgEl = document.getElementById('msg');
+        msgEl.innerText = "位置情報を取得中アル…";
+
+        if (!navigator.geolocation) {
+          processClockAction(type, staff, site, "位置情報非対応");
+          return;
+        }
+
+        navigator.geolocation.getCurrentPosition(
+          (position) => {
+            const lat = position.coords.latitude;
+            const lng = position.coords.longitude;
+            const locationStr = `${lat.toFixed(5)}, ${lng.toFixed(5)}`;
+            processClockAction(type, staff, site, locationStr);
+          },
+          (error) => {
+            console.warn("位置情報取得エラー: ", error.message);
+            processClockAction(type, staff, site, "取得失敗(許可拒否等)");
+          },
+          { timeout: 10000, enableHighAccuracy: true }
+        );
+      }
+
+      async function processClockAction(type, staff, site, locationStr) {
+        const now = new Date();
+        const timeStr = `${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}:${String(now.getSeconds()).padStart(2, '0')}`;
+        
+        if (type === 'in') {
+          // 新規に出勤データをFirestoreに追加
+          await addDoc(collection(db, "records"), {
+            staff: staff,
+            site: site,
+            clockIn: timeStr,
+            clockInLoc: locationStr,
+            clockOut: "-",
+            clockOutLoc: "-",
+            status: "勤務中",
+            timestamp: Date.now()
+          });
+          document.getElementById('msg').innerText = `${staff} さん、出勤打刻したアル！ (${timeStr})`;
+        } else {
+          // 該当スタッフの「勤務中」の記録を探す
+          const target = records.find(r => r.staff === staff && r.status === "勤務中");
+          if (!target) {
+            document.getElementById('msg').innerText = "";
+            return alert("該当する出勤記録が見つからないアル！");
+          }
+
+          // Firestore上の該当データを更新
+          const recordRef = doc(db, "records", target.id);
+          await updateDoc(recordRef, {
+            clockOut: timeStr,
+            clockOutLoc: locationStr,
+            status: "退勤済み"
+          });
+          
+          document.getElementById('msg').innerText = `${staff} さん、退勤打刻したアル！ (${timeStr})`;
+        }
+      }
+
+      function renderTable() {
+        const tbody = document.getElementById('attendanceTable');
+        if (!tbody) return;
+        tbody.innerHTML = '';
+        
+        // 新しい順に並び替え
+        const sortedRecords = [...records].sort((a, b) => (b.timestamp || 0) - (a.timestamp || 0));
+
+        sortedRecords.forEach((r) => {
+          const badgeClass = r.status === '勤務中' ? 'badge-working' : 'badge-done';
+          
+          const inLocHtml = formatLocationCell(r.clockInLoc);
+          const outLocHtml = formatLocationCell(r.clockOutLoc);
+
+          const tr = document.createElement('tr');
+          tr.innerHTML = `
+            <td>${r.staff}</td>
+            <td>${r.site}</td>
+            <td>${r.clockIn}</td>
+            <td><span class="${badgeClass}">${r.status}</span></td>
+            <td>${inLocHtml}</td>
+            <td>${r.clockOut}</td>
+            <td>${outLocHtml}</td>
+            <td><button class="btn-delete" onclick="window.removeRecord('${r.id}')">削除</button></td>
+          `;
+          tbody.appendChild(tr);
+        });
+      }
+
+      function formatLocationCell(locStr) {
+        if (!locStr || locStr === "-" || locStr.includes("失敗") || locStr.includes("非対応")) {
+          return locStr || "-";
+        }
+        return `<a href="https://maps.google.com/?q=${locStr}" target="_blank" class="map-link">📍 緯度経度を見る</a>`;
+      }
+
+      window.removeRecord = async function(id) {
+        if (confirm("この打刻データを削除するアルか？")) {
+          await deleteDoc(doc(db, "records", id));
+        }
+      };
+
+      function exportToCSV() {
+        if (records.length === 0) return alert("出力するデータがないアル！");
+        let csv = '名前,現場名,出勤時刻,状態,出勤位置,退勤時刻,退勤位置\n';
+        records.forEach(r => {
+          csv += `"${r.staff}","${r.site}","${r.clockIn}","${r.status}","${r.clockInLoc || '-'}","${r.clockOut}","${r.clockOutLoc || '-'}"\n`;
+        });
+        const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = 'attendance.csv';
+        a.click();
+      }
+    </script>
 </head>
 <body>
 
-    <!-- メイン打刻画面 -->
-    <div class="card">
-        <h2 id="main-title">
-            <span>出退勤表(仮)</span>
-            <span class="sync-badge">リアルタイム同期中</span>
-        </h2>
-        
-        <div class="form-group">
-            <label>従業員を選択:</label>
-            <select id="employee-select">
-                <option value="">-- 選択してください --</option>
-            </select>
-        </div>
-
-        <div class="form-group">
-            <label>現場名を選択:</label>
-            <select id="site-select">
-                <option value="">-- 選択してください --</option>
-            </select>
-        </div>
-
-        <div class="location-info" id="location-display">現在地: 未取得</div>
-        <button type="button" id="get-location-btn" style="margin-top: 6px; padding: 6px 10px; font-size: 12px; background: #64748b; border-radius: 4px;">現在地を確認する</button>
-
-        <div class="btn-row">
-            <button type="button" class="btn-in" id="clock-in-btn">出勤</button>
-            <button type="button" class="btn-out" id="clock-out-btn">退勤</button>
-        </div>
+    <div id="employeePage" class="card">
+      <h2 id="appTitleDisplay">出退勤表(仮) <span id="syncStatus" class="sync-badge">リアルタイム同期中</span></h2>
+      
+      <div class="form-group" style="margin-top: 14px;">
+        <label>従業員を選択:</label>
+        <select id="staffSelect"></select>
+      </div>
+      <div class="form-group">
+        <label>現場名を選択:</label>
+        <select id="siteSelect" onchange="toggleSiteInput()"></select>
+        <input type="text" id="customSiteName" placeholder="現場名を入力してください" style="display: none; margin-top: 8px;">
+      </div>
+      <div class="btn-group">
+        <button class="btn-start" id="btnClockIn">出勤</button>
+        <button class="btn-end" id="btnClockOut">退勤</button>
+      </div>
+      <p id="msg"></p>
+      
+      <hr style="margin-top: 24px; border: 0; border-top: 1px solid #e2e8f0;">
+      <button class="btn-lock" id="btnOpenAdmin">🔒 管理者画面へ（ロック付）</button>
     </div>
 
-    <button type="button" class="admin-toggle-btn" id="open-admin-btn">🔒 管理者画面へ（ロック付）</button>
+    <div id="adminPage" class="card" style="display: none; border: 2px solid var(--primary);">
+      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
+        <h2 style="margin: 0; border: none; color: var(--primary);">管理者画面</h2>
+        <button class="btn-delete" style="padding: 8px 12px; font-size: 12px;" id="btnCloseAdmin">🔒 閉じる</button>
+      </div>
 
-    <!-- 管理者画面（初期非表示） -->
-    <div class="card" id="admin-panel" style="display: none;">
-        <h2>
-            <span>管理者画面</span>
-            <button type="button" class="btn-danger" id="close-admin-btn" style="width: auto; padding: 6px 12px; font-size: 13px;">閉じる</button>
-        </h2>
+      <h3>基本設定</h3>
+      <div class="form-group-flex">
+        <input type="text" id="inputAppTitle" value="出退勤表(仮)" placeholder="アプリタイトル">
+        <button class="btn-add" id="btnUpdateTitle">保存</button>
+      </div>
+      
+      <div class="form-group-flex">
+        <input type="password" id="inputNewPin" placeholder="新しいロックナンバー">
+        <button class="btn-add" id="btnUpdatePin">変更</button>
+      </div>
 
-        <h3>基本設定</h3>
-        <div class="form-group">
-            <label>アプリタイトル</label>
-            <input type="text" id="admin-title-input" placeholder="例: KU・DESIGN 出退勤表">
-            <button type="button" class="btn-primary" id="save-title-btn" style="margin-top: 8px;">保存</button>
-        </div>
-        <div class="form-group">
-            <label>ロックナンバー変更</label>
-            <input type="password" id="admin-pin-input" placeholder="新しいPINコード">
-            <button type="button" class="btn-primary" id="save-pin-btn" style="margin-top: 8px;">変更</button>
-        </div>
+      <hr style="margin: 20px 0; border: 0; border-top: 1px solid #e2e8f0;">
 
-        <h3>打データ一覧・出力</h3>
-        <button type="button" class="btn-primary" id="export-csv-btn">CSV出力</button>
-        <div style="overflow-x: auto; max-height: 200px; margin-top: 10px;">
-            <table id="records-table">
-                <thead>
-                    <tr>
-                        <th>名前</th>
-                        <th>現場名</th>
-                        <th>日時</th>
-                        <th>状態</th>
-                        <th>位置</th>
-                    </tr>
-                </thead>
-                <tbody id="records-tbody">
-                    <!-- 動的挿入 -->
-                </tbody>
-            </table>
-        </div>
+      <h3>打刻データ一覧・出力</h3>
+      <div style="margin-bottom: 12px;">
+        <button class="btn-csv" id="btnExportCSV">CSV出力</button>
+      </div>
+      <div class="table-container">
+        <table>
+          <thead>
+            <tr>
+              <th>名前</th>
+              <th>現場名</th>
+              <th>出勤</th>
+              <th>状態</th>
+              <th>出勤位置</th>
+              <th>退勤</th>
+              <th>退勤位置</th>
+              <th>操作</th>
+            </tr>
+          </thead>
+          <tbody id="attendanceTable"></tbody>
+        </table>
+      </div>
 
-        <h3>従業員名簿の編集</h3>
-        <div class="form-group">
-            <input type="text" id="new-employee-input" placeholder="新しい従業員名">
-            <button type="button" class="btn-primary" id="add-employee-btn" style="margin-top: 8px;">追加</button>
-        </div>
-        <div id="employee-list-container"></div>
+      <hr style="margin: 20px 0; border: 0; border-top: 1px solid #e2e8f0;">
 
-        <h3>現場一覧の編集</h3>
-        <div class="form-group">
-            <input type="text" id="new-site-input" placeholder="新しい現場名">
-            <button type="button" class="btn-primary" id="add-site-btn" style="margin-top: 8px;">追加</button>
-        </div>
-        <div id="site-list-container"></div>
+      <h3>従業員名簿の編集</h3>
+      <div class="form-group-flex">
+        <input type="text" id="newStaffName" placeholder="新しい従業員名">
+        <button class="btn-add" id="btnAddStaff">追加</button>
+      </div>
+      <ul id="staffListDisplay" class="staff-list"></ul>
+
+      <h3>現場一覧の編集</h3>
+      <div class="form-group-flex">
+        <input type="text" id="newSiteName" placeholder="新しい現場名">
+        <button class="btn-add" id="btnAddSite">追加</button>
+      </div>
+      <ul id="siteListDisplay" class="staff-list"></ul>
     </div>
-
-    <!-- Firebase SDK (Modular CDN) -->
-    <script type="module">
-        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
-        import { getFirestore, doc, setDoc, getDoc, updateDoc, collection, addDoc, onSnapshot, deleteDoc, query, orderBy } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
-
-        // Firebase設定（自動反映用）
-        const firebaseConfig = {
-            projectId: "work-stamp-app"
-        };
-        
-        // もしfirebaseConfigのapiKey等が必要な場合はここに入りますが、テストモード・同一プロジェクト内であればこれでも動作します
-        const app = initializeApp(firebaseConfig);
-        const db = getFirestore(app);
-
-        // DOM要素
-        const mainTitle = document.getElementById("main-title");
-        const appTitleTag = document.getElementById("app-title-tag");
-        const adminTitleInput = document.getElementById("admin-title-input");
-        const employeeSelect = document.getElementById("employee-select");
-        const siteSelect = document.getElementById("site-select");
-        const employeeListContainer = document.getElementById("employee-list-container");
-        const siteListContainer = document.getElementById("site-list-container");
-        const recordsTbody = document.getElementById("records-tbody");
-        const locationDisplay = document.getElementById("location-display");
-        
-        let currentLat = null;
-        let currentLng = null;
-
-        // 現在地取得
-        document.getElementById("get-location-btn").addEventListener("click", () => {
-            if (!navigator.geolocation) {
-                alert("お使いのブラウザは位置情報に対応していません");
-                return;
-            }
-            locationDisplay.textContent = "現在地を取得中...";
-            navigator.geolocation.getCurrentPosition(
-                (pos) => {
-                    currentLat = pos.coords.latitude;
-                    currentLng = pos.coords.longitude;
-                    locationDisplay.textContent = `現在地: 取得成功 (${currentLat.toFixed(4)}, ${currentLng.toFixed(4)})`;
-                },
-                (err) => {
-                    locationDisplay.textContent = "現在地の取得に失敗しました";
-                    alert("位置情報の取得に失敗しました。権限を確認してください。");
-                },
-                { enableHighAccuracy: true }
-            );
-        });
-
-        // 1. 設定データのリアルタイム監視 (タイトル等)
-        onSnapshot(doc(db, "settings", "config"), (docSnap) => {
-            if (docSnap.exists()) {
-                const data = docSnap.data();
-                if (data.title) {
-                    mainTitle.innerHTML = `<span>${data.title}</span><span class="sync-badge">リアルタイム同期中</span>`;
-                    appTitleTag.textContent = data.title;
-                    adminTitleInput.value = data.title;
-                }
-            } else {
-                // 初期データ作成
-                setDoc(doc(db, "settings", "config"), { title: "出退勤表(仮)", pin: "1234" });
-            }
-        });
-
-        // タイトル保存
-        document.getElementById("save-title-btn").addEventListener("click", async () => {
-            const newTitle = adminTitleInput.value.trim();
-            if (!newTitle) return;
-            try {
-                await setDoc(doc(db, "settings", "config"), { title: newTitle }, { merge: true });
-                alert("タイトルを保存しました！");
-            } catch (e) {
-                alert("保存に失敗しました: " + e.message);
-            }
-        });
-
-        // 2. 従業員名簿のリアルタイム監視
-        onSnapshot(collection(db, "employees"), (snapshot) => {
-            employeeSelect.innerHTML = '<option value="">-- 選択してください --</option>';
-            employeeListContainer.innerHTML = "";
-            snapshot.forEach((docSnap) => {
-                const emp = docSnap.data();
-                const id = docSnap.id;
-                
-                // セレクトボックスに追加
-                const opt = document.createElement("option");
-                opt.value = emp.name;
-                opt.textContent = emp.name;
-                employeeSelect.appendChild(opt);
-
-                // 管理者画面の一覧に追加
-                const div = document.createElement("div");
-                div.className = "list-item";
-                div.innerHTML = `<span>${emp.name}</span> <button type="button" class="btn-danger" style="width:auto; padding:4px 8px; font-size:12px;" data-id="${id}" data-type="employee">削除</button>`;
-                employeeListContainer.appendChild(div);
-            });
-        });
-
-        // 従業員追加
-        document.getElementById("add-employee-btn").addEventListener("click", async () => {
-            const input = document.getElementById("new-employee-input");
-            const name = input.value.trim();
-            if (!name) return;
-            await addDoc(collection(db, "employees"), { name });
-            input.value = "";
-        });
-
-        // 3. 現場一覧のリアルタイム監視
-        onSnapshot(collection(db, "sites"), (snapshot) => {
-            siteSelect.innerHTML = '<option value="">-- 選択してください --</option>';
-            siteListContainer.innerHTML = "";
-            snapshot.forEach((docSnap) => {
-                const site = docSnap.data();
-                const id = docSnap.id;
-
-                const opt = document.createElement("option");
-                opt.value = site.name;
-                opt.textContent = site.name;
-                siteSelect.appendChild(opt);
-
-                const div = document.createElement("div");
-                div.className = "list-item";
-                div.innerHTML = `<span>${site.name}</span> <button type="button" class="btn-danger" style="width:auto; padding:4px 8px; font-size:12px;" data-id="${id}" data-type="site">削除</button>`;
-                siteListContainer.appendChild(div);
-            });
-        });
-
-        // 現場追加
-        document.getElementById("add-site-btn").addEventListener("click", async () => {
-            const input = document.getElementById("new-site-input");
-            const name = input.value.trim();
-            if (!name) return;
-            await addDoc(collection(db, "sites"), { name });
-            input.value = "";
-        });
-
-        // リスト削除（従業員・現場共通）
-        document.addEventListener("click", async (e) => {
-            if (e.target.tagName === "BUTTON" && e.target.dataset.id) {
-                const id = e.target.dataset.id;
-                const type = e.target.dataset.type;
-                if (type === "employee") {
-                    await deleteDoc(doc(db, "employees", id));
-                } else if (type === "site") {
-                    await deleteDoc(doc(db, "sites", id));
-                }
-            }
-        });
-
-        // 4. 打刻データのリアルタイム監視・記録
-        onSnapshot(query(collection(db, "records"), orderBy("timestamp", "desc")), (snapshot) => {
-            recordsTbody.innerHTML = "";
-            snapshot.forEach((docSnap) => {
-                const r = docSnap.data();
-                const tr = document.createElement("tr");
-                const timeStr = r.timestamp ? new Date(r.timestamp.toDate()).toLocaleString() : "";
-                tr.innerHTML = `<td>${r.employee}</td><td>${r.site}</td><td>${timeStr}</td><td>${r.type}</td><td>${r.lat ? r.lat.toFixed(2)+','+r.lng.toFixed(2) : '-'}</td>`;
-                recordsTbody.appendChild(tr);
-            });
-        });
-
-        // 出勤・退勤ボタン処理
-        const handleClock = async (type) => {
-            const employee = employeeSelect.value;
-            const site = siteSelect.value;
-            if (!employee || !site) {
-                alert("従業員と現場名を選択してください！");
-                return;
-            }
-            try {
-                await addDoc(collection(db, "records"), {
-                    employee,
-                    site,
-                    type,
-                    lat: currentLat,
-                    lng: currentLng,
-                    timestamp: new Date()
-                });
-                alert(`${type}を記録しました！`);
-            } catch (e) {
-                alert("記録に失敗しました: " + e.message);
-            }
-        };
-
-        document.getElementById("clock-in-btn").addEventListener("click", () => handleClock("出勤"));
-        document.getElementById("clock-out-btn").addEventListener("click", () => handleClock("退勤"));
-
-        // 管理者画面の開閉
-        const adminPanel = document.getElementById("admin-panel");
-        document.getElementById("open-admin-btn").addEventListener("click", () => {
-            const pin = prompt("管理者PINコードを入力してください (初期値: 1234):");
-            if (pin === "1234") { // 簡易PIN
-                adminPanel.style.display = "block";
-                window.scrollTo({ top: document.body.scrollHeight, behavior: 'smooth' });
-            } else if (pin !== null) {
-                alert("PINコードが違います");
-            }
-        });
-
-        document.getElementById("close-admin-btn").addEventListener("click", () => {
-            adminPanel.style.display = "none";
-        });
-
-        // CSV出力
-        document.getElementById("export-csv-btn").addEventListener("click", () => {
-            let csv = "名前,現場名,日時,状態,緯度,経度\n";
-            // 簡易的にテーブルから出力
-            const rows = recordsTbody.querySelectorAll("tr");
-            rows.forEach(tr => {
-                const cols = tr.querySelectorAll("td");
-                if(cols.length > 0) {
-                    csv += Array.from(cols).map(c => `"${c.textContent}"`).join(",") + "\n";
-                }
-            });
-            const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" });
-            const url = URL.createObjectURL(blob);
-            const a = document.createElement("a");
-            a.href = url;
-            a.download = "work_records.csv";
-            a.click();
-        });
-    </script>
 </body>
 </html>
