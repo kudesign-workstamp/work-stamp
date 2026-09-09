@@ -109,7 +109,7 @@
       import { getFirestore, collection, addDoc, getDocs, deleteDoc, doc, updateDoc, onSnapshot, setDoc, getDoc } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
 
       const firebaseConfig = {
-        apiKey: "AIzaSyDxVOTA6qpXn4_mPWyiqvI...", // 念のためあなたの設定をそのまま埋め込んでいます
+        apiKey: "AIzaSyDxVOTA6qpXn4_mPWyiqvI...", 
         authDomain: "work-stamp-app.firebaseapp.com",
         projectId: "work-stamp-app",
         storageBucket: "work-stamp-app.firebasestorage.app",
@@ -144,7 +144,6 @@
 
       // Firestoreからリアルタイムでデータを同期・取得
       async function initFirebaseData() {
-        // 設定データ（タイトル・PIN）の取得
         const settingsRef = doc(db, "settings", "config");
         const settingsSnap = await getDoc(settingsRef);
         if (settingsSnap.exists()) {
@@ -154,7 +153,6 @@
           staffMembers = data.staffMembers || ["山田 太郎", "佐藤 花子"];
           siteMembers = data.siteMembers || ["現場A", "現場B"];
         } else {
-          // 初期データ登録
           await setDoc(settingsRef, {
             adminPin: "1234",
             appTitle: "出退勤表(仮)",
@@ -170,7 +168,6 @@
           snapshot.forEach((docSnap) => {
             records.push({ id: docSnap.id, ...docSnap.data() });
           });
-          // 日時順などに並び替え（必要に応じて）
           renderTable();
         });
       }
@@ -368,7 +365,6 @@
         const timeStr = `${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}:${String(now.getSeconds()).padStart(2, '0')}`;
         
         if (type === 'in') {
-          // 新規に出勤データをFirestoreに追加
           await addDoc(collection(db, "records"), {
             staff: staff,
             site: site,
@@ -381,14 +377,12 @@
           });
           document.getElementById('msg').innerText = `${staff} さん、出勤打刻したアル！ (${timeStr})`;
         } else {
-          // 該当スタッフの「勤務中」の記録を探す
           const target = records.find(r => r.staff === staff && r.status === "勤務中");
           if (!target) {
             document.getElementById('msg').innerText = "";
             return alert("該当する出勤記録が見つからないアル！");
           }
 
-          // Firestore上の該当データを更新
           const recordRef = doc(db, "records", target.id);
           await updateDoc(recordRef, {
             clockOut: timeStr,
@@ -405,7 +399,6 @@
         if (!tbody) return;
         tbody.innerHTML = '';
         
-        // 新しい順に並び替え
         const sortedRecords = [...records].sort((a, b) => (b.timestamp || 0) - (a.timestamp || 0));
 
         sortedRecords.forEach((r) => {
@@ -433,7 +426,7 @@
         if (!locStr || locStr === "-" || locStr.includes("失敗") || locStr.includes("非対応")) {
           return locStr || "-";
         }
-        return `<a href="https://maps.google.com/?q=${locStr}" target="_blank" class="map-link">📍 緯度経度を見る</a>`;
+        return `<a href="https://maps.google.com/?q=${locStr}" target="_blank" class="map-link">📍 現在地を確認する</a>`;
       }
 
       window.removeRecord = async function(id) {
