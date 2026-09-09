@@ -124,6 +124,7 @@
       const db = getFirestore(app);
 
       let adminPin = "1234";
+      let notificationEmail = "";
       let staffMembers = [
         { name: "山田 太郎", pin: "1111" },
         { name: "佐藤 花子", pin: "2222" }
@@ -146,6 +147,7 @@
         document.getElementById('btnCloseAdmin').onclick = closeAdminPage;
         
         document.getElementById('btnUpdateTitle').onclick = updateTitle;
+        document.getElementById('btnUpdateEmail').onclick = updateEmail;
         document.getElementById('btnUpdatePin').onclick = updatePin;
       };
 
@@ -156,6 +158,7 @@
           const data = settingsSnap.data();
           adminPin = data.adminPin || "1234";
           appTitle = data.appTitle || "出退勤表(仮)";
+          notificationEmail = data.notificationEmail || "";
           siteMembers = data.siteMembers || ["現場A", "現場B"];
           
           if (data.staffMembers && data.staffMembers.length > 0) {
@@ -169,6 +172,7 @@
           await setDoc(settingsRef, {
             adminPin: "1234",
             appTitle: "出退勤表(仮)",
+            notificationEmail: "",
             staffMembers: staffMembers,
             siteMembers: siteMembers
           });
@@ -189,6 +193,7 @@
         await setDoc(settingsRef, {
           adminPin: adminPin,
           appTitle: appTitle,
+          notificationEmail: notificationEmail,
           staffMembers: staffMembers,
           siteMembers: siteMembers
         });
@@ -198,6 +203,7 @@
       function updateUI() {
         document.getElementById('appTitleDisplay').childNodes[0].nodeValue = appTitle + " ";
         document.getElementById('inputAppTitle').value = appTitle;
+        document.getElementById('inputNotificationEmail').value = notificationEmail;
         renderStaffOptions();
         renderStaffManagementList();
         renderSiteOptions();
@@ -219,6 +225,13 @@
         appTitle = newTitle;
         await saveSettingsToFirestore();
         alert("タイトルを変更したアル！");
+      };
+
+      window.updateEmail = async function() {
+        const email = document.getElementById('inputNotificationEmail').value.trim();
+        notificationEmail = email;
+        await saveSettingsToFirestore();
+        alert("通知先メールアドレスを保存したアル！");
       };
 
       function openAdminPage() {
@@ -402,6 +415,8 @@
         const seconds = String(now.getSeconds()).padStart(2, '0');
         
         const dateTimeStr = `${month}/${day} ${hours}:${minutes}:${seconds}`;
+        const actionTypeStr = (type === 'in') ? '出勤' : '退勤';
+        let targetSite = site;
         
         if (type === 'in') {
           await addDoc(collection(db, "records"), {
@@ -421,6 +436,7 @@
             document.getElementById('msg').innerText = "";
             return alert("該当する出勤記録が見つからないアル！");
           }
+          targetSite = target.site;
 
           const recordRef = doc(db, "records", target.id);
           await updateDoc(recordRef, {
@@ -431,6 +447,22 @@
           
           document.getElementById('msg').innerText = `${staff} さん、退勤打刻したアル！ (${dateTimeStr})`;
         }
+
+        // 打刻完了時のメール通知処理
+        if (notificationEmail) {
+          sendNotificationEmail(notificationEmail, {
+            staff: staff,
+            type: actionTypeStr,
+            site: targetSite || '不明',
+            time: dateTimeStr,
+            location: locationStr
+          });
+        }
+      }
+
+      function sendNotificationEmail(toEmail, data) {
+        console.log(`[通知送信] 宛先: ${toEmail}`, data);
+        // ここにEmailJSなどの送信処理を組み込むことができます
       }
 
       function renderTable() {
@@ -537,6 +569,11 @@
       <div class="form-group-flex">
         <input type="text" id="inputAppTitle" value="出退勤表(仮)" placeholder="アプリタイトル">
         <button class="btn-add" id="btnUpdateTitle">保存</button>
+      </div>
+      
+      <div class="form-group-flex">
+        <input type="email" id="inputNotificationEmail" placeholder="通知先メールアドレス">
+        <button class="btn-add" id="btnUpdateEmail">設定</button>
       </div>
       
       <div class="form-group-flex">
