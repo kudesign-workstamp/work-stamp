@@ -123,12 +123,18 @@
       const app = initializeApp(firebaseConfig);
       const db = getFirestore(app);
 
-      let adminPin = "1234";
+      // PINハッシュ化関数 (Web Crypto API - SHA-256)
+      async function hashPin(pin) {
+        if (!pin) return "";
+        const msgUint8 = new TextEncoder().encode(pin);
+        const hashBuffer = await crypto.subtle.digest('SHA-256', msgUint8);
+        const hashArray = Array.from(new Uint8Array(hashBuffer));
+        return hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
+      }
+
+      let adminPinHash = ""; // ハッシュ化された管理者PINを保持
       let notificationEmail = "";
-      let staffMembers = [
-        { name: "山田 太郎", pin: "1111" },
-        { name: "佐藤 花子", pin: "2222" }
-      ];
+      let staffMembers = [];
       let siteMembers = ["現場A", "現場B"];
       let records = [];
       let appTitle = "出退勤表(仮)";
@@ -154,25 +160,41 @@
       async function initFirebaseData() {
         const settingsRef = doc(db, "settings", "config");
         const settingsSnap = await getDoc(settingsRef);
+        
         if (settingsSnap.exists()) {
           const data = settingsSnap.data();
-          adminPin = data.adminPin || "1234";
+          // ハッシュ値があればそれを読み込み、なければ初期値 "1234" のハッシュを設定
+          adminPinHash = data.adminPinHash || await hashPin("1234");
           appTitle = data.appTitle || "出退勤表(仮)";
           notificationEmail = data.notificationEmail || "";
           siteMembers = data.siteMembers || ["現場A", "現場B"];
           
           if (data.staffMembers && data.staffMembers.length > 0) {
-            if (typeof data.staffMembers[0] === 'string') {
-              staffMembers = data.staffMembers.map(name => ({ name: name, pin: "0000" }));
-            } else {
-              staffMembers = data.staffMembers;
-            }
+            // 既存データが平文pinの場合は自動でハッシュ化に移行する配慮
+            staffMembers = await Promise.all(data.staffMembers.map(async (staff) => {
+              let pHash = staff.pinHash;
+              if (!pHash && staff.pin) {
+                pHash = await hashPin(staff.pin);
+              }
+              return { name: staff.name, pinHash: pHash || await hashPin("0000") };
+            }));
+          } else {
+            staffMembers = [
+              { name: "山田 太郎", pinHash: await hashPin("1111") },
+              { name: "佐藤 花子", pinHash: await hashPin("2222") }
+            ];
           }
         } else {
+          // 初回作成時
+          adminPinHash = await hashPin("1234");
+          staffMembers = [
+            { name: "山田 太郎", pinHash: await hashPin("1111") },
+            { name: "佐藤 花子", pinHash: await hashPin("2222") }
+          ];
           await setDoc(settingsRef, {
-            adminPin: "1234",
-            appTitle: "出退勤表(仮)",
-            notificationEmail: "",
+            adminPinHash: adminPinHash,
+            appTitle: appTitle,
+            notificationEmail: notificationEmail,
             staffMembers: staffMembers,
             siteMembers: siteMembers
           });
@@ -191,7 +213,7 @@
       async function saveSettingsToFirestore() {
         const settingsRef = doc(db, "settings", "config");
         await setDoc(settingsRef, {
-          adminPin: adminPin,
+          adminPinHash: adminPinHash,
           appTitle: appTitle,
           notificationEmail: notificationEmail,
           staffMembers: staffMembers,
@@ -213,7 +235,7 @@
       window.updatePin = async function() {
         const newPin = document.getElementById('inputNewPin').value.trim();
         if (!newPin) return alert("新しいロックナンバーを入力するアル！");
-        adminPin = newPin;
+        adminPinHash = await hashPin(newPin);
         await saveSettingsToFirestore();
         document.getElementById('inputNewPin').value = '';
         alert("管理者ロックナンバーを変更したアル！");
@@ -234,11 +256,13 @@
         alert("通知先メールアドレスを保存したアル！");
       };
 
-      function openAdminPage() {
+      async function openAdminPage() {
         const pin = prompt("管理者ロックナンバーを入力するアル：");
-        if (pin === adminPin) {
+        if (pin === null) return;
+        const enteredHash = await hashPin(pin);
+        if (enteredHash === adminPinHash) {
           document.getElementById('adminPage').style.display = 'block';
-        } else if (pin !== null) {
+        } else {
           alert("ロックナンバーが違うアル！");
         }
       }
@@ -271,7 +295,7 @@
           li.innerHTML = `
             <div class="staff-info">
               <span>${staff.name}</span>
-              <small>ロックナンバー: ${staff.pin}</small>
+              <small>ロックナンバー: **** (保護されています)</small>
             </div>
             <button class="btn-delete" onclick="window.removeStaff(${index})">削除</button>
           `;
@@ -289,10 +313,12 @@
         if (!pin) return alert("従業員のロックナンバーを入力するアル！");
         if (staffMembers.some(s => s.name === name)) return alert("もう登録されている名前アル！");
 
-        staffMembers.push({ name: name, pin: pin });
+        const pinHash = await hashPin(pin);
+        staffMembers.push({ name: name, pinHash: pinHash });
         await saveSettingsToFirestore();
         inputName.value = '';
         inputPin.value = '';
+        alert("新しい従業員を追加したアル！");
       };
 
       window.removeStaff = async function(index) {
@@ -360,7 +386,7 @@
         }
       };
 
-      function handleClock(type) {
+      async function handleClock(type) {
         const staffName = document.getElementById('staffSelect').value;
         if (!staffName) return alert("従業員を選ぶアル！");
         
@@ -369,7 +395,9 @@
 
         const enteredPin = prompt(`${staffName} さん、ロックナンバーを入力してください：`);
         if (enteredPin === null) return;
-        if (enteredPin !== staffObj.pin) {
+
+        const enteredHash = await hashPin(enteredPin);
+        if (enteredHash !== staffObj.pinHash) {
           return alert("ロックナンバーが違うアル！本人以外は打刻できないよ！");
         }
 
@@ -463,7 +491,6 @@
       function sendNotificationEmail(toEmail, data) {
         console.log(`[通知送信] 宛先: ${toEmail}`, data);
 
-        // EmailJSを使った実際の送信処理 (Service ID と Template ID を設定済)
         emailjs.send('service_dis5gyi', 'template_p2ghsr8', {
           to_email: toEmail,
           staff_name: data.staff,
