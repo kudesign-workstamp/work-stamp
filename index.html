@@ -217,16 +217,27 @@
 
       // 匿名認証の実行（成功時はtrue、失敗時はfalseを返すように修正）
       async function initAuth() {
-        try {
-          await signInAnonymously(auth);
-          console.log("匿名認証OK");
-          return true;
-        } catch (error) {
-          console.error("匿名認証失敗:", error);
-          alert("通信認証に失敗しました。ページを再読み込みしてください。");
-          return false;
-        }
-      }
+      async function initAuth() {
+  try {
+    const result = await signInAnonymously(auth);
+
+    console.log("匿名認証OK:", result.user.uid);
+
+    return true;
+  } catch (error) {
+    console.error("匿名認証失敗");
+    console.error("error.code =", error.code);
+    console.error("error.message =", error.message);
+
+    alert(
+      "通信認証に失敗しました。\n\n" +
+      "エラーコード: " + error.code + "\n" +
+      "内容: " + error.message
+    );
+
+    return false;
+  }
+}
 
       window.onload = async function() {  
         // 認証が成功した場合のみFirestoreの初期化へ進むアル！
