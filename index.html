@@ -126,17 +126,17 @@
       // PINハッシュ化関数 (Web Crypto API - SHA-256)
       async function hashPin(pin) {
         if (!pin) return "";
-        const msgUint8 = new TextEncoder().encode(pin);
+        const cleanPin = String(pin).trim();
+        const msgUint8 = new TextEncoder().encode(cleanPin);
         const hashBuffer = await crypto.subtle.digest('SHA-256', msgUint8);
         const hashArray = Array.from(new Uint8Array(hashBuffer));
         return hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
       }
 
-      let adminPinHash = ""; // ハッシュ化された管理者PINを保持
+      let adminPinHash = "";
       let notificationEmail = "";
       let staffMembers = [];
       let siteMembers = ["現場A", "現場B"];
-      let records = [];
       let appTitle = "出退勤表(仮)";
 
       window.onload = function() {
@@ -163,20 +163,25 @@
         
         if (settingsSnap.exists()) {
           const data = settingsSnap.data();
-          // ハッシュ値があればそれを読み込み、なければ初期値 "1234" のハッシュを設定
           adminPinHash = data.adminPinHash || await hashPin("1234");
           appTitle = data.appTitle || "出退勤表(仮)";
           notificationEmail = data.notificationEmail || "";
           siteMembers = data.siteMembers || ["現場A", "現場B"];
           
           if (data.staffMembers && data.staffMembers.length > 0) {
-            // 既存データが平文pinの場合は自動でハッシュ化に移行する配慮
             staffMembers = await Promise.all(data.staffMembers.map(async (staff) => {
               let pHash = staff.pinHash;
+              //もし従来のpinプロンプトで平文保存されていた場合、自動でハッシュ化に変換する
               if (!pHash && staff.pin) {
                 pHash = await hashPin(staff.pin);
               }
-              return { name: staff.name, pinHash: pHash || await hashPin("0000") };
+              // 初回デモ用として、もし既にある名前でピンが未設定っぽいならデフォルトを割り当てる
+              if (!pHash) {
+                if (staff.name === "山田 太郎") pHash = await hashPin("1111");
+                else if (staff.name === "佐藤 花子") pHash = await hashPin("2222");
+                else pHash = await hashPin("0000");
+              }
+              return { name: staff.name, pinHash: pHash };
             }));
           } else {
             staffMembers = [
@@ -185,7 +190,6 @@
             ];
           }
         } else {
-          // 初回作成時
           adminPinHash = await hashPin("1234");
           staffMembers = [
             { name: "山田 太郎", pinHash: await hashPin("1111") },
@@ -199,6 +203,9 @@
             siteMembers: siteMembers
           });
         }
+        
+        // 念のため最新状態をFirestoreへ強制上書き保存して不整合を解消
+        await saveSettingsToFirestore();
         updateUI();
 
         onSnapshot(collection(db, "records"), (snapshot) => {
@@ -209,6 +216,8 @@
           renderTable();
         });
       }
+
+      let records = [];
 
       async function saveSettingsToFirestore() {
         const settingsRef = doc(db, "settings", "config");
@@ -476,7 +485,6 @@
           document.getElementById('msg').innerText = `${staff} さん、退勤打刻したアル！ (${dateTimeStr})`;
         }
 
-        // 打刻完了時のメール通知処理
         if (notificationEmail) {
           sendNotificationEmail(notificationEmail, {
             staff: staff,
@@ -489,8 +497,6 @@
       }
 
       function sendNotificationEmail(toEmail, data) {
-        console.log(`[通知送信] 宛先: ${toEmail}`, data);
-
         emailjs.send('service_dis5gyi', 'template_p2ghsr8', {
           to_email: toEmail,
           staff_name: data.staff,
@@ -499,11 +505,8 @@
           time: data.time,
           location: data.location
         })
-        .then(() => {
-          console.log('通知メール送信成功！');
-        }, (err) => {
+        .then(() => {}, (err) => {
           console.error('通知メール送信失敗:', err);
-          alert('打刻は完了したけど、メール送信に失敗したアル…設定を確認してね！');
         });
       }
 
@@ -557,7 +560,6 @@
             alert("すべての打刻データを一括削除したアル！");
           } catch (error) {
             console.error("一括削除エラー: ", error);
-            alert("削除中にエラーが発生したアル。");
           }
         }
       }
@@ -577,7 +579,7 @@
       }
     </script>
 
-    <!-- EmailJSのSDK読み込み ＆ Public Keyの設定 -->
+    <!-- EmailJSのSDK読み込み -->
     <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/@emailjs/browser@4/dist/email.min.js"></script>
     <script type="text/javascript">
        (function(){
