@@ -215,9 +215,8 @@
       let appTitle = "出退勤表(仮)";  
       let records = [];  
 
-      // 匿名認証の実行（成功時はtrue、失敗時はfalseを返すように修正）
-      async function initAuth() {
-      async function initAuth() {
+      // 匿名認証の実行
+async function initAuth() {
   try {
     const result = await signInAnonymously(auth);
 
