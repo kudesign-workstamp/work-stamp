@@ -26,6 +26,69 @@
             -webkit-tap-highlight-color: transparent;
         }
 
+        /* 起動時アプリロック画面（全画面オーバーレイ） */
+        #appLockScreen {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            background-color: #0f172a;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 9999;
+            padding: 20px;
+            box-sizing: border-box;
+        }
+        .lock-box {
+            background: #ffffff;
+            padding: 24px;
+            border-radius: 16px;
+            width: 100%;
+            max-width: 360px;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.3);
+            text-align: center;
+        }
+        .lock-box h2 {
+            margin-top: 0;
+            color: var(--primary);
+            font-size: 20px;
+            border: none;
+            padding: 0;
+            justify-content: center;
+        }
+        .lock-box p {
+            font-size: 13px;
+            color: var(--text-sub);
+            margin-bottom: 20px;
+        }
+        .lock-box input {
+            text-align: center;
+            letter-spacing: 4px;
+            font-size: 24px;
+            padding: 10px;
+            margin-bottom: 14px;
+        }
+        .lock-box button {
+            width: 100%;
+            background-color: var(--primary);
+            padding: 14px;
+            font-size: 16px;
+            border-radius: 8px;
+            color: white;
+            border: none;
+            font-weight: bold;
+            cursor: pointer;
+        }
+        .lock-error {
+            color: var(--danger);
+            font-size: 12px;
+            margin-top: 8px;
+            min-height: 18px;
+            font-weight: bold;
+        }
+
         .card { 
             background: var(--card-bg); 
             padding: 16px; 
@@ -133,7 +196,8 @@
         return hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
       }
 
-      let adminPinHash = "";
+      let appUnlockPinHash = "";   // 起動時画面のロックナンバー
+      let adminPinHash = "";       // 管理者画面用のロックナンバー
       let notificationEmail = "";
       let staffMembers = [];
       let siteMembers = ["現場A", "現場B"];
@@ -141,6 +205,11 @@
 
       window.onload = function() {
         initFirebaseData();
+
+        document.getElementById('btnUnlockApp').onclick = verifyAppUnlock;
+        document.getElementById('inputUnlockPin').onkeypress = (e) => {
+          if (e.key === 'Enter') verifyAppUnlock();
+        };
 
         document.getElementById('btnClockIn').onclick = () => handleClock('in');
         document.getElementById('btnClockOut').onclick = () => handleClock('out');
@@ -155,15 +224,16 @@
         
         document.getElementById('btnUpdateTitle').onclick = updateTitle;
         document.getElementById('btnUpdateEmail').onclick = updateEmail;
-        document.getElementById('btnUpdatePin').onclick = updatePin;
+        document.getElementById('btnUpdateAppUnlockPin').onclick = updateAppUnlockPin;
+        document.getElementById('btnUpdateAdminPin').onclick = updateAdminPin;
       };
 
       async function initFirebaseData() {
         const settingsRef = doc(db, "settings", "config");
         const settingsSnap = await getDoc(settingsRef);
         
-        // デフォルトのハッシュ準備
-        const defaultAdminHash = await hashPin("1234");
+        const defaultAppUnlockHash = await hashPin("1234");
+        const defaultAdminHash = await hashPin("5678"); // 初期値は分けておく（例: 管理者は5678）
         const defaultStaff = [
           { name: "山田 太郎", pinHash: await hashPin("1111") },
           { name: "佐藤 花子", pinHash: await hashPin("2222") }
@@ -171,7 +241,10 @@
 
         if (settingsSnap.exists()) {
           const data = settingsSnap.data();
+          // 移行期間のため、古い adminPinHash しかない場合は両方に同じ値をフォールバックさせる
+          appUnlockPinHash = data.appUnlockPinHash || data.adminPinHash || defaultAppUnlockHash;
           adminPinHash = data.adminPinHash || defaultAdminHash;
+          
           appTitle = data.appTitle || "出退勤表(仮)";
           notificationEmail = data.notificationEmail || "";
           siteMembers = data.siteMembers || ["現場A", "現場B"];
@@ -179,11 +252,7 @@
           if (data.staffMembers && data.staffMembers.length > 0) {
             staffMembers = await Promise.all(data.staffMembers.map(async (staff) => {
               let pHash = staff.pinHash;
-              //もし従来のpinプロンプトで平文保存されていた場合、自動でハッシュ化に変換する
-              if (!pHash && staff.pin) {
-                pHash = await hashPin(staff.pin);
-              }
-              // ハッシュがない場合の救済
+              if (!pHash && staff.pin) pHash = await hashPin(staff.pin);
               if (!pHash) {
                 if (staff.name === "山田 太郎") pHash = await hashPin("1111");
                 else if (staff.name === "佐藤 花子") pHash = await hashPin("2222");
@@ -195,9 +264,11 @@
             staffMembers = defaultStaff;
           }
         } else {
+          appUnlockPinHash = defaultAppUnlockHash;
           adminPinHash = defaultAdminHash;
           staffMembers = defaultStaff;
           await setDoc(settingsRef, {
+            appUnlockPinHash: appUnlockPinHash,
             adminPinHash: adminPinHash,
             appTitle: appTitle,
             notificationEmail: notificationEmail,
@@ -217,11 +288,32 @@
         });
       }
 
+      // 起動ロック解除の判定（最初の画面）
+      async function verifyAppUnlock() {
+        const pin = document.getElementById('inputUnlockPin').value.trim();
+        const errEl = document.getElementById('lockErrorMsg');
+        if (!pin) {
+          errEl.innerText = "パスコードを入力するアル！";
+          return;
+        }
+
+        const enteredHash = await hashPin(pin);
+        if (enteredHash === appUnlockPinHash) {
+          document.getElementById('appLockScreen').style.display = 'none';
+          document.getElementById('inputUnlockPin').value = '';
+          errEl.innerText = '';
+        } else {
+          errEl.innerText = "パスコードが違うアル！";
+          document.getElementById('inputUnlockPin').value = '';
+        }
+      }
+
       let records = [];
 
       async function saveSettingsToFirestore() {
         const settingsRef = doc(db, "settings", "config");
         await setDoc(settingsRef, {
+          appUnlockPinHash: appUnlockPinHash,
           adminPinHash: adminPinHash,
           appTitle: appTitle,
           notificationEmail: notificationEmail,
@@ -231,17 +323,24 @@
         updateUI();
       }
 
-      // メンバーやPIN設定がバグった時に初期値に戻せる強制リセットボタン用
       async function resetSettingsToDefault() {
-        if (!confirm("設定（スタッフのPINや現場リスト）を初期状態（山田1111, 佐藤2222）にリセットするアルか？")) return;
-        adminPinHash = await hashPin("1234");
+        const pin = prompt("【確認】設定を初期化するため、管理者ロックナンバーを入力してください：");
+        if (pin === null) return;
+        const enteredHash = await hashPin(pin);
+        if (enteredHash !== adminPinHash) {
+          return alert("管理者ロックナンバーが違うアル！");
+        }
+
+        if (!confirm("設定（スタッフのPINや現場リスト）を初期状態にリセットするアルか？")) return;
+        appUnlockPinHash = await hashPin("1234");
+        adminPinHash = await hashPin("5678");
         staffMembers = [
           { name: "山田 太郎", pinHash: await hashPin("1111") },
           { name: "佐藤 花子", pinHash: await hashPin("2222") }
         ];
         siteMembers = ["現場A", "現場B"];
         await saveSettingsToFirestore();
-        alert("設定を初期状態にリセットしたアル！山田さんは「1111」、佐藤さんは「2222」になったよ！");
+        alert("設定を初期状態にリセットしたアル！起動用PINは「1234」、管理者用PINは「5678」に戻ったよ！");
       }
 
       function updateUI() {
@@ -254,12 +353,43 @@
         renderSiteManagementList();
       }
 
-      window.updatePin = async function() {
-        const newPin = document.getElementById('inputNewPin').value.trim();
-        if (!newPin) return alert("新しいロックナンバーを入力するアル！");
+      // 起動時ロックナンバー変更
+      window.updateAppUnlockPin = async function() {
+        const currentPin = document.getElementById('inputCurrentAppPin').value.trim();
+        const newPin = document.getElementById('inputNewAppPin').value.trim();
+        
+        if (!currentPin) return alert("現在の起動用ロックナンバーを入力するアル！");
+        if (!newPin) return alert("新しい起動用ロックナンバーを入力するアル！");
+
+        const enteredHash = await hashPin(currentPin);
+        if (enteredHash !== appUnlockPinHash) {
+          return alert("現在の起動用ロックナンバーが違います！");
+        }
+
+        appUnlockPinHash = await hashPin(newPin);
+        await saveSettingsToFirestore();
+        document.getElementById('inputCurrentAppPin').value = '';
+        document.getElementById('inputNewAppPin').value = '';
+        alert("起動時ロックナンバーを変更したアル！");
+      };
+
+      // 管理者画面用ロックナンバー変更
+      window.updateAdminPin = async function() {
+        const currentPin = document.getElementById('inputCurrentAdminPin').value.trim();
+        const newPin = document.getElementById('inputNewAdminPin').value.trim();
+        
+        if (!currentPin) return alert("現在の管理者ロックナンバーを入力するアル！");
+        if (!newPin) return alert("新しい管理者ロックナンバーを入力するアル！");
+
+        const enteredHash = await hashPin(currentPin);
+        if (enteredHash !== adminPinHash) {
+          return alert("現在の管理者ロックナンバーが違います！");
+        }
+
         adminPinHash = await hashPin(newPin);
         await saveSettingsToFirestore();
-        document.getElementById('inputNewPin').value = '';
+        document.getElementById('inputCurrentAdminPin').value = '';
+        document.getElementById('inputNewAdminPin').value = '';
         alert("管理者ロックナンバーを変更したアル！");
       };
 
@@ -285,7 +415,7 @@
         if (enteredHash === adminPinHash) {
           document.getElementById('adminPage').style.display = 'block';
         } else {
-          alert("ロックナンバーが違うアル！");
+          alert("管理者ロックナンバーが違うアル！");
         }
       }
 
@@ -565,8 +695,15 @@
       };
 
       async function clearAllRecords() {
+        const pin = prompt("【警告】全データを削除するため、管理者ロックナンバーを入力してください：");
+        if (pin === null) return;
+        const enteredHash = await hashPin(pin);
+        if (enteredHash !== adminPinHash) {
+          return alert("管理者ロックナンバーが違うアル！");
+        }
+
         if (records.length === 0) return alert("削除するデータがないアル！");
-        if (confirm("【警告】すべての打刻データを一括削除するアルか？この操作は元に戻せないよ！")) {
+        if (confirm("【最終確認】すべての打刻データを一括削除するアルか？この操作は元に戻せないよ！")) {
           try {
             const deletePromises = records.map(r => deleteDoc(doc(db, "records", r.id)));
             await Promise.all(deletePromises);
@@ -603,6 +740,17 @@
     </script>
 </head>
 <body>
+
+    <!-- 🌐 起動時の全体ロック画面 -->
+    <div id="appLockScreen">
+      <div class="lock-box">
+        <h2>🔒 出退勤管理システム</h2>
+        <p>アクセスするには起動用ロックナンバーを入力してください</p>
+        <input type="password" id="inputUnlockPin" placeholder="****" maxlength="8">
+        <button id="btnUnlockApp">ロック解除</button>
+        <div id="lockErrorMsg" class="lock-error"></div>
+      </div>
+    </div>
 
     <div id="employeePage" class="card">
       <h2 id="appTitleDisplay">出退勤表(仮) <span id="syncStatus" class="sync-badge">リアルタイム同期中</span></h2>
@@ -643,12 +791,26 @@
         <button class="btn-add" id="btnUpdateEmail">設定</button>
       </div>
       
-      <div class="form-group-flex">
-        <input type="password" id="inputNewPin" placeholder="新しい管理者ロックナンバー">
-        <button class="btn-add" id="btnUpdatePin">変更</button>
+      <!-- 🚀 起動時ロックナンバー変更欄 -->
+      <div class="form-group" style="margin-bottom: 10px;">
+        <label>起動時ロックナンバーの変更:</label>
+        <div class="form-group-flex">
+          <input type="password" id="inputCurrentAppPin" placeholder="現在の起動PIN" maxlength="8">
+          <input type="password" id="inputNewAppPin" placeholder="新しい起動PIN" maxlength="8">
+          <button class="btn-add" id="btnUpdateAppUnlockPin">変更</button>
+        </div>
       </div>
 
-      <!-- 緊急初期化ボタンを追加 -->
+      <!-- 🔑 管理者画面用ロックナンバー変更欄 -->
+      <div class="form-group" style="margin-bottom: 10px;">
+        <label>管理者画面用ロックナンバーの変更:</label>
+        <div class="form-group-flex">
+          <input type="password" id="inputCurrentAdminPin" placeholder="現在の管理者PIN" maxlength="8">
+          <input type="password" id="inputNewAdminPin" placeholder="新しい管理者PIN" maxlength="8">
+          <button class="btn-add" id="btnUpdateAdminPin">変更</button>
+        </div>
+      </div>
+
       <div style="margin-top: 10px;">
         <button class="btn-clear-all" id="btnResetSettings" style="background-color: #b45309; font-size: 14px;">🔄 設定を強制初期化する (PINが通らない時)</button>
       </div>
