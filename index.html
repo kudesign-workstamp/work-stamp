@@ -185,7 +185,7 @@
       import { getAuth, signInAnonymously } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
 
       const firebaseConfig = {  
-        apiKey: "AIzaSyDxVOTA6qpXn4_mPWyiqvI...",   
+        apiKey: "AIzaSyDxVOTA6qpXn4_mPWyiqvINgjb1_k2Jeh8",   
         authDomain: "work-stamp-app.firebaseapp.com",  
         projectId: "work-stamp-app",  
         storageBucket: "work-stamp-app.firebasestorage.app",  
@@ -215,7 +215,7 @@
       let appTitle = "出退勤表(仮)";  
       let records = [];  
 
-      // 匿名認証の実行
+// 匿名認証の実行
 async function initAuth() {
   try {
     const result = await signInAnonymously(auth);
@@ -238,12 +238,14 @@ async function initAuth() {
   }
 }
 
-      window.onload = async function() {  
-        // 認証が成功した場合のみFirestoreの初期化へ進むアル！
-        const authSuccess = await initAuth();  
-        if (!authSuccess) return;
+      window.onload = async function() {
+  const authSuccess = await initAuth();
 
-        await initFirebaseData();  
+  if (!authSuccess) {
+    return;
+  }
+
+  await initFirebaseData();
 
         document.getElementById('btnUnlockApp').onclick = verifyAppUnlock;  
         document.getElementById('inputUnlockPin').onkeypress = (e) => {  
