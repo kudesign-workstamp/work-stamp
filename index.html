@@ -148,6 +148,7 @@
         document.getElementById('btnAddSite').onclick = addSite;
         document.getElementById('btnExportCSV').onclick = exportToCSV;
         document.getElementById('btnClearAllRecords').onclick = clearAllRecords;
+        document.getElementById('btnResetSettings').onclick = resetSettingsToDefault;
         
         document.getElementById('btnOpenAdmin').onclick = openAdminPage;
         document.getElementById('btnCloseAdmin').onclick = closeAdminPage;
@@ -161,9 +162,16 @@
         const settingsRef = doc(db, "settings", "config");
         const settingsSnap = await getDoc(settingsRef);
         
+        // デフォルトのハッシュ準備
+        const defaultAdminHash = await hashPin("1234");
+        const defaultStaff = [
+          { name: "山田 太郎", pinHash: await hashPin("1111") },
+          { name: "佐藤 花子", pinHash: await hashPin("2222") }
+        ];
+
         if (settingsSnap.exists()) {
           const data = settingsSnap.data();
-          adminPinHash = data.adminPinHash || await hashPin("1234");
+          adminPinHash = data.adminPinHash || defaultAdminHash;
           appTitle = data.appTitle || "出退勤表(仮)";
           notificationEmail = data.notificationEmail || "";
           siteMembers = data.siteMembers || ["現場A", "現場B"];
@@ -175,7 +183,7 @@
               if (!pHash && staff.pin) {
                 pHash = await hashPin(staff.pin);
               }
-              // 初回デモ用として、もし既にある名前でピンが未設定っぽいならデフォルトを割り当てる
+              // ハッシュがない場合の救済
               if (!pHash) {
                 if (staff.name === "山田 太郎") pHash = await hashPin("1111");
                 else if (staff.name === "佐藤 花子") pHash = await hashPin("2222");
@@ -184,17 +192,11 @@
               return { name: staff.name, pinHash: pHash };
             }));
           } else {
-            staffMembers = [
-              { name: "山田 太郎", pinHash: await hashPin("1111") },
-              { name: "佐藤 花子", pinHash: await hashPin("2222") }
-            ];
+            staffMembers = defaultStaff;
           }
         } else {
-          adminPinHash = await hashPin("1234");
-          staffMembers = [
-            { name: "山田 太郎", pinHash: await hashPin("1111") },
-            { name: "佐藤 花子", pinHash: await hashPin("2222") }
-          ];
+          adminPinHash = defaultAdminHash;
+          staffMembers = defaultStaff;
           await setDoc(settingsRef, {
             adminPinHash: adminPinHash,
             appTitle: appTitle,
@@ -204,8 +206,6 @@
           });
         }
         
-        // 念のため最新状態をFirestoreへ強制上書き保存して不整合を解消
-        await saveSettingsToFirestore();
         updateUI();
 
         onSnapshot(collection(db, "records"), (snapshot) => {
@@ -229,6 +229,19 @@
           siteMembers: siteMembers
         });
         updateUI();
+      }
+
+      // メンバーやPIN設定がバグった時に初期値に戻せる強制リセットボタン用
+      async function resetSettingsToDefault() {
+        if (!confirm("設定（スタッフのPINや現場リスト）を初期状態（山田1111, 佐藤2222）にリセットするアルか？")) return;
+        adminPinHash = await hashPin("1234");
+        staffMembers = [
+          { name: "山田 太郎", pinHash: await hashPin("1111") },
+          { name: "佐藤 花子", pinHash: await hashPin("2222") }
+        ];
+        siteMembers = ["現場A", "現場B"];
+        await saveSettingsToFirestore();
+        alert("設定を初期状態にリセットしたアル！山田さんは「1111」、佐藤さんは「2222」になったよ！");
       }
 
       function updateUI() {
@@ -633,6 +646,11 @@
       <div class="form-group-flex">
         <input type="password" id="inputNewPin" placeholder="新しい管理者ロックナンバー">
         <button class="btn-add" id="btnUpdatePin">変更</button>
+      </div>
+
+      <!-- 緊急初期化ボタンを追加 -->
+      <div style="margin-top: 10px;">
+        <button class="btn-clear-all" id="btnResetSettings" style="background-color: #b45309; font-size: 14px;">🔄 設定を強制初期化する (PINが通らない時)</button>
       </div>
 
       <hr style="margin: 20px 0; border: 0; border-top: 1px solid #e2e8f0;">
