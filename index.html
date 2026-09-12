@@ -669,38 +669,75 @@
 /* =====================================
    リアルタイム打刻データ
 ===================================== */
-onSnapshot(
-    collection(db, "records"),
-    (snapshot) => {
+let unsubscribeRecords = null;
+
+function stopRealtimeRecords() {
+    if (unsubscribeRecords) {
+        unsubscribeRecords();
+        unsubscribeRecords = null;
         console.log(
-            "Firestoreリアルタイム更新:",
-            snapshot.docChanges().length,
-            "件"
+            "Firestoreリアルタイム同期を停止"
         );
-        records = [];
-        snapshot.forEach(
-            (docSnap) => {
-                records.push({
-                    id: docSnap.id,
-                    ...docSnap.data()
-                });
-            }
-        );
-        renderTable();
-    },
-    (error) => {
-        console.error(
-            "Firestoreリアルタイム同期エラー:",
-            error
-        );
-        const msgEl =
-            document.getElementById("msg");
-        if (msgEl) {
-            msgEl.innerText =
-                "⚠️ リアルタイム同期エラー";
-        }
     }
-);
+}
+
+function startRealtimeRecords() {
+    stopRealtimeRecords();
+
+    if (!auth.currentUser) {
+        console.warn(
+            "認証ユーザーがいないため、リアルタイム同期を開始しません"
+        );
+        return;
+    }
+
+    console.log(
+        "Firestoreリアルタイム同期を開始:",
+        auth.currentUser.uid
+    );
+
+    unsubscribeRecords = onSnapshot(
+        collection(db, "records"),
+        (snapshot) => {
+            console.log(
+                "Firestoreリアルタイム更新:",
+                snapshot.docChanges().length,
+                "件"
+            );
+
+            records = [];
+
+            snapshot.forEach(
+                (docSnap) => {
+                    records.push({
+                        id: docSnap.id,
+                        ...docSnap.data()
+                    });
+                }
+            );
+
+            renderTable();
+        },
+        (error) => {
+            console.error(
+                "Firestoreリアルタイム同期エラー:",
+                error.code,
+                error.message
+            );
+
+            const msgEl =
+                document.getElementById("msg");
+
+            if (msgEl) {
+                msgEl.innerText =
+                    "⚠️ リアルタイム同期エラー: " +
+                    error.code;
+            }
+        }
+    );
+}
+
+startRealtimeRecords();
             } catch (error) {
                 console.error(
                     "Firebaseデータ読み込み失敗:",
@@ -1021,6 +1058,12 @@ onSnapshot(
                 }
                 try {
                     /*
+                     * リアルタイム監視をいったん停止
+                     * （認証ユーザー切り替え中のpermission-denied防止）
+                     */
+                    stopRealtimeRecords();
+
+                    /*
                      * 現在の匿名ユーザーをいったん終了
                      */
                     await signOut(auth);
@@ -1054,6 +1097,13 @@ onSnapshot(
                         "管理者ログインOK:",
                         result.user.uid
                     );
+
+                    /*
+                     * 管理者認証が完了してから
+                     * リアルタイム監視を再開
+                     */
+                    startRealtimeRecords();
+
                     document
                         .getElementById(
                             "adminPage"
@@ -1081,6 +1131,7 @@ onSnapshot(
                         await signInAnonymously(
                             auth
                         );
+                        startRealtimeRecords();
                     } catch (anonymousError) {
                         console.error(
                             "匿名再ログイン失敗:",
@@ -1108,13 +1159,19 @@ onSnapshot(
                  * 管理者アカウントをログアウト
                  */
                 try {
+                    stopRealtimeRecords();
+
                     await signOut(auth);
+
                     /*
                      * 一般利用用の匿名ログインへ戻す
                      */
                     await signInAnonymously(
                         auth
                     );
+
+                    startRealtimeRecords();
+
                     console.log(
                         "管理者ログアウト → 匿名認証"
                     );
