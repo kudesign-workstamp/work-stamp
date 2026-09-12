@@ -392,7 +392,10 @@
             updateDoc,
             onSnapshot,
             setDoc,
-            getDoc
+            getDoc,
+            getDocs,
+            query,
+            where
         } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
 
         import {
@@ -2391,18 +2394,21 @@ onSnapshot(
                 if (type === "in") {
 
                     /*
-                     * すでに勤務中なら、同じスタッフの
-                     * 2重出勤を禁止するアル！
+                     * 画面側の records はリアルタイム同期の途中だと
+                     * 最新状態ではない場合があるため、
+                     * 出勤直前にFirestoreへ直接確認するアル！
+                     * これで「連打」や「同期前の2回目」も防ぐヨ！
                      */
-                    const alreadyWorking =
-                        records.some(
-                            r =>
-                                r.staff === staff &&
-                                r.status === "勤務中"
-                        );
+                    const workingQuery = query(
+                        collection(db, "records"),
+                        where("staff", "==", staff),
+                        where("status", "==", "勤務中")
+                    );
 
+                    const workingSnapshot =
+                        await getDocs(workingQuery);
 
-                    if (alreadyWorking) {
+                    if (!workingSnapshot.empty) {
 
                         document
                             .getElementById(
@@ -2410,9 +2416,8 @@ onSnapshot(
                             )
                             .innerText = "";
 
-
                         return alert(
-                            `${staff}さんは、もう出勤してるアル！\n同じ日に何度も出勤打刻できないヨ！`
+                            `${staff}さんは、もう出勤してるアル！\n先に退勤打刻してから、もう一度出勤するヨ！`
                         );
                     }
 
