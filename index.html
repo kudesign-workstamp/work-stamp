@@ -400,6 +400,7 @@
 
         import {
             getAuth,
+            getIdToken,
             signInAnonymously,
             signInWithEmailAndPassword,
             signOut,
@@ -906,32 +907,64 @@
    リアルタイム打刻データ
 ===================================== */
 
-/* 認証ユーザーが切り替わるたびに監視を張り直すアル！ */
+/*
+ * 認証ユーザーが切り替わるたびに、Firestoreの監視を
+ * 一度完全に解除してから張り直すアル！
+ * 古い監視から遅れて届くエラーで「同期エラー」に戻らないよう、
+ * 世代番号も使って管理するヨ！
+ */
 let recordsUnsubscribe = null;
+let recordsListenerGeneration = 0;
+
+function stopRecordsListener() {
+    recordsListenerGeneration++;
+
+    if (recordsUnsubscribe) {
+        try {
+            recordsUnsubscribe();
+        } catch (e) {
+            console.warn("古いFirestore監視の解除時エラー:", e);
+        }
+        recordsUnsubscribe = null;
+    }
+}
 
 function startRecordsListener() {
 
-    if (recordsUnsubscribe) {
-        recordsUnsubscribe();
-        recordsUnsubscribe = null;
-    }
+    stopRecordsListener();
 
-    const syncStatus =
-        document.getElementById("syncStatus");
+    const generation = recordsListenerGeneration;
+    const syncStatus = document.getElementById("syncStatus");
 
     if (syncStatus) {
         syncStatus.innerText = "同期確認中…";
     }
 
-    recordsUnsubscribe = onSnapshot(
+    if (!auth.currentUser) {
+        if (syncStatus) {
+            syncStatus.innerText = "⚠️ 認証待ち";
+        }
+        return;
+    }
+
+    const currentUid = auth.currentUser.uid;
+    console.log("Firestore監視開始:", currentUid);
+
+    const unsubscribe = onSnapshot(
         collection(db, "records"),
 
         (snapshot) => {
 
+            /* 古い監視からのコールバックは無視するアル！ */
+            if (generation !== recordsListenerGeneration) {
+                return;
+            }
+
             console.log(
                 "Firestoreリアルタイム更新:",
                 snapshot.docChanges().length,
-                "件"
+                "件 / UID:",
+                currentUid
             );
 
             records = [];
@@ -944,15 +977,24 @@ function startRecordsListener() {
             });
 
             if (syncStatus) {
-                syncStatus.innerText = "リアルタイム同期中";
+                syncStatus.innerText = "🟢 リアルタイム同期中";
             }
 
             renderTable();
         },
 
         (error) => {
+
+            /* 古い監視のエラーで画面を汚さないアル！ */
+            if (generation !== recordsListenerGeneration) {
+                console.warn("古いFirestore監視のエラーを無視:", error);
+                return;
+            }
+
             console.error(
                 "Firestoreリアルタイム同期エラー:",
+                error.code,
+                error.message,
                 error
             );
 
@@ -963,6 +1005,8 @@ function startRecordsListener() {
             recordsUnsubscribe = null;
         }
     );
+
+    recordsUnsubscribe = unsubscribe;
 }
 
 
@@ -1453,10 +1497,10 @@ function startRecordsListener() {
 
                 try {
 
-                    /*
-                     * 現在の匿名ユーザーをいったん終了
-                     */
+                    /* 現在の匿名ユーザーのFirestore監視を先に停止するアル！ */
+                    stopRecordsListener();
 
+                    /* 現在の匿名ユーザーをいったん終了 */
                     await signOut(auth);
 
 
@@ -1472,10 +1516,10 @@ function startRecordsListener() {
                             password
                         );
 
+                    /* 管理者の最新認証トークンを確実に取得するアル！ */
+                    await getIdToken(result.user, true);
 
-                    /*
-                     * UIDを確認
-                     */
+                    /* UIDを確認 */
 
                     if (
                         result.user.uid !==
@@ -1488,6 +1532,7 @@ function startRecordsListener() {
                             auth
                         );
 
+                        startRecordsListener();
 
                         alert(
                             "このアカウントは管理者として登録されていません。"
@@ -1584,12 +1629,12 @@ function startRecordsListener() {
 
                 try {
 
+                    /* 管理者用Firestore監視を先に停止するアル！ */
+                    stopRecordsListener();
+
                     await signOut(auth);
 
-
-                    /*
-                     * 一般利用用の匿名ログインへ戻す
-                     */
+                    /* 一般利用用の匿名ログインへ戻す */
 
                     await signInAnonymously(
                         auth
