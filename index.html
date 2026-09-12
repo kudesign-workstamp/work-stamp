@@ -408,8 +408,7 @@
            Firebase設定
         ===================================== */
 
-        const ADMIN_UID =
-            "Cvx67XLdEBMMUb9MSfpcDkUqfZD2";
+        const ADMIN_UID = "Cvx67XLdEBMMUb9MSfpcDkUqfZD2";
 
         const firebaseConfig = {
             apiKey: "AIzaSyDxVOTA6qpXn4_mPWyiqvINgjb1_k2Jeh8",
@@ -420,14 +419,10 @@
             appId: "1:978728365973:web:10c006305a417551061972"
         };
 
-        const app =
-            initializeApp(firebaseConfig);
 
-        const db =
-            getFirestore(app);
-
-        const auth =
-            getAuth(app);
+        const app = initializeApp(firebaseConfig);
+        const db = getFirestore(app);
+        const auth = getAuth(app);
 
 
         /* =====================================
@@ -440,13 +435,10 @@
                 return "";
             }
 
-            const cleanPin =
-                String(pin).trim();
+            const cleanPin = String(pin).trim();
 
             const msgUint8 =
-                new TextEncoder().encode(
-                    cleanPin
-                );
+                new TextEncoder().encode(cleanPin);
 
             const hashBuffer =
                 await crypto.subtle.digest(
@@ -461,9 +453,7 @@
 
             return hashArray
                 .map(
-                    b =>
-                        b.toString(16)
-                         .padStart(2, "0")
+                    b => b.toString(16).padStart(2, "0")
                 )
                 .join("");
         }
@@ -484,8 +474,7 @@
             "現場B"
         ];
 
-        let appTitle =
-            "出退勤表(仮)";
+        let appTitle = "出退勤表(仮)";
 
         let records = [];
 
@@ -497,8 +486,7 @@
         function isAdminUser() {
 
             return !!auth.currentUser &&
-                   auth.currentUser.uid ===
-                   ADMIN_UID;
+                   auth.currentUser.uid === ADMIN_UID;
         }
 
 
@@ -525,26 +513,29 @@
             try {
 
                 const existingUser =
-                    await new Promise(
-                        (resolve) => {
+                    await new Promise((resolve) => {
 
-                            const unsubscribe =
-                                onAuthStateChanged(
-                                    auth,
-                                    (user) => {
+                        const unsubscribe =
+                            onAuthStateChanged(
+                                auth,
+                                (user) => {
 
-                                        unsubscribe();
+                                    unsubscribe();
+                                    resolve(user);
 
-                                        resolve(user);
-                                    }
-                                );
-                        }
-                    );
+                                }
+                            );
+
+                    });
 
 
                 /*
                  * 前回管理者ログインが残っている場合、
                  * 起動時には匿名ユーザーへ戻す。
+                 *
+                 * これにより、共有端末で
+                 * 管理者画面がログイン状態のまま
+                 * 残るのを防ぐ。
                  */
 
                 if (
@@ -555,9 +546,7 @@
                     await signOut(auth);
 
                     const result =
-                        await signInAnonymously(
-                            auth
-                        );
+                        await signInAnonymously(auth);
 
                     console.log(
                         "管理者セッションを解除して匿名認証:",
@@ -580,9 +569,7 @@
 
 
                 const result =
-                    await signInAnonymously(
-                        auth
-                    );
+                    await signInAnonymously(auth);
 
                 console.log(
                     "匿名認証OK:",
@@ -590,6 +577,7 @@
                 );
 
                 return true;
+
 
             } catch (error) {
 
@@ -616,138 +604,101 @@
            ページ起動
         ===================================== */
 
-        window.onload =
-            async function() {
+        window.onload = async function() {
 
-                const authSuccess =
-                    await initAuth();
+            const authSuccess =
+                await initAuth();
 
-                if (!authSuccess) {
-                    return;
-                }
-
-
-                await initFirebaseData();
+            if (!authSuccess) {
+                return;
+            }
 
 
-                /*
-                 * Firebaseデータ読み込み完了後に
-                 * リアルタイム同期を開始
-                 */
-                startRealtimeRecords();
+            await initFirebaseData();
 
 
-                /* 起動ロック */
+            /* 起動ロック */
 
-                document
-                    .getElementById(
-                        "btnUnlockApp"
-                    )
-                    .onclick =
-                        verifyAppUnlock;
-
-                document
-                    .getElementById(
-                        "inputUnlockPin"
-                    )
-                    .onkeypress =
-                        (e) => {
-
-                            if (e.key === "Enter") {
-                                verifyAppUnlock();
-                            }
-                        };
+            document
+                .getElementById("btnUnlockApp")
+                .onclick = verifyAppUnlock;
 
 
-                /* 出退勤 */
+            document
+                .getElementById("inputUnlockPin")
+                .onkeypress = (e) => {
 
-                document
-                    .getElementById(
-                        "btnClockIn"
-                    )
-                    .onclick =
-                        () => handleClock("in");
+                    if (e.key === "Enter") {
+                        verifyAppUnlock();
+                    }
 
-                document
-                    .getElementById(
-                        "btnClockOut"
-                    )
-                    .onclick =
-                        () => handleClock("out");
+                };
 
 
-                /* 管理者 */
+            /* 出退勤 */
 
-                document
-                    .getElementById(
-                        "btnOpenAdmin"
-                    )
-                    .onclick =
-                        openAdminPage;
+            document
+                .getElementById("btnClockIn")
+                .onclick = () => handleClock("in");
 
-                document
-                    .getElementById(
-                        "btnCloseAdmin"
-                    )
-                    .onclick =
-                        closeAdminPage;
 
-                document
-                    .getElementById(
-                        "btnUpdateTitle"
-                    )
-                    .onclick =
-                        updateTitle;
+            document
+                .getElementById("btnClockOut")
+                .onclick = () => handleClock("out");
 
-                document
-                    .getElementById(
-                        "btnUpdateEmail"
-                    )
-                    .onclick =
-                        updateEmail;
 
-                document
-                    .getElementById(
-                        "btnUpdateAppUnlockPin"
-                    )
-                    .onclick =
-                        updateAppUnlockPin;
+            /* 管理者 */
 
-                document
-                    .getElementById(
-                        "btnResetSettings"
-                    )
-                    .onclick =
-                        resetSettingsToDefault;
+            document
+                .getElementById("btnOpenAdmin")
+                .onclick = openAdminPage;
 
-                document
-                    .getElementById(
-                        "btnExportCSV"
-                    )
-                    .onclick =
-                        exportToCSV;
 
-                document
-                    .getElementById(
-                        "btnClearAllRecords"
-                    )
-                    .onclick =
-                        clearAllRecords;
+            document
+                .getElementById("btnCloseAdmin")
+                .onclick = closeAdminPage;
 
-                document
-                    .getElementById(
-                        "btnAddStaff"
-                    )
-                    .onclick =
-                        addStaff;
 
-                document
-                    .getElementById(
-                        "btnAddSite"
-                    )
-                    .onclick =
-                        addSite;
-            };
+            document
+                .getElementById("btnUpdateTitle")
+                .onclick = updateTitle;
+
+
+            document
+                .getElementById("btnUpdateEmail")
+                .onclick = updateEmail;
+
+
+            document
+                .getElementById("btnUpdateAppUnlockPin")
+                .onclick = updateAppUnlockPin;
+
+
+            document
+                .getElementById("btnResetSettings")
+                .onclick = resetSettingsToDefault;
+
+
+            document
+                .getElementById("btnExportCSV")
+                .onclick = exportToCSV;
+
+
+            document
+                .getElementById("btnClearAllRecords")
+                .onclick = clearAllRecords;
+
+
+            document
+                .getElementById("btnAddStaff")
+                .onclick = addStaff;
+
+
+            document
+                .getElementById("btnAddSite")
+                .onclick = addSite;
+
+        };
 
 
         /* =====================================
@@ -765,10 +716,9 @@
                         "config"
                     );
 
+
                 const settingsSnap =
-                    await getDoc(
-                        settingsRef
-                    );
+                    await getDoc(settingsRef);
 
 
                 const defaultAppUnlockHash =
@@ -779,14 +729,12 @@
 
                     {
                         name: "山田 太郎",
-                        pinHash:
-                            await hashPin("1111")
+                        pinHash: await hashPin("1111")
                     },
 
                     {
                         name: "佐藤 花子",
-                        pinHash:
-                            await hashPin("2222")
+                        pinHash: await hashPin("2222")
                     }
 
                 ];
@@ -814,14 +762,9 @@
 
 
                     siteMembers =
-                        Array.isArray(
-                            data.siteMembers
-                        )
+                        Array.isArray(data.siteMembers)
                             ? data.siteMembers
-                            : [
-                                "現場A",
-                                "現場B"
-                            ];
+                            : ["現場A", "現場B"];
 
 
                     if (
@@ -841,7 +784,8 @@
 
                                         /*
                                          * 古いデータに
-                                         * PINが直接入っていた場合
+                                         * PINが直接入っていた場合の
+                                         * 移行処理
                                          */
 
                                         if (
@@ -893,11 +837,12 @@
 
 
                                         return {
-                                            name:
-                                                staff.name,
-                                            pinHash:
-                                                pHash
+
+                                            name: staff.name,
+                                            pinHash: pHash
+
                                         };
+
                                     }
                                 )
                             );
@@ -912,10 +857,11 @@
                 } else {
 
                     /*
-                     * 初回起動
+                     * 初回起動。
                      *
                      * 匿名ユーザーでは
                      * settingsを書き込まない。
+                     * 管理者ログイン後に保存する。
                      */
 
                     appUnlockPinHash =
@@ -933,10 +879,65 @@
                         "出退勤表(仮)";
 
                     notificationEmail = "";
+
                 }
 
 
                 updateUI();
+
+
+/* =====================================
+   リアルタイム打刻データ
+===================================== */
+
+onSnapshot(
+    collection(db, "records"),
+
+    (snapshot) => {
+
+        console.log(
+            "Firestoreリアルタイム更新:",
+            snapshot.docChanges().length,
+            "件"
+        );
+
+        records = [];
+
+        snapshot.forEach(
+            (docSnap) => {
+
+                records.push({
+
+                    id: docSnap.id,
+                    ...docSnap.data()
+
+                });
+
+            }
+        );
+
+        renderTable();
+
+    },
+
+    (error) => {
+
+        console.error(
+            "Firestoreリアルタイム同期エラー:",
+            error
+        );
+
+        const msgEl =
+            document.getElementById("msg");
+
+        if (msgEl) {
+
+            msgEl.innerText =
+                "⚠️ リアルタイム同期エラー";
+
+        }
+    }
+);
 
 
             } catch (error) {
@@ -955,118 +956,6 @@
 
 
         /* =====================================
-           リアルタイム打刻データ
-        ===================================== */
-
-        let unsubscribeRecords = null;
-
-
-        function stopRealtimeRecords() {
-
-            if (unsubscribeRecords) {
-
-                unsubscribeRecords();
-
-                unsubscribeRecords = null;
-
-                console.log(
-                    "Firestoreリアルタイム同期を停止"
-                );
-            }
-        }
-
-
-        function startRealtimeRecords() {
-
-            /*
-             * すでに監視中なら一度停止
-             */
-
-            stopRealtimeRecords();
-
-
-            if (!auth.currentUser) {
-
-                console.warn(
-                    "認証ユーザーがいないため、リアルタイム同期を開始しません"
-                );
-
-                return;
-            }
-
-
-            console.log(
-                "Firestoreリアルタイム同期を開始:",
-                auth.currentUser.uid
-            );
-
-
-            unsubscribeRecords =
-                onSnapshot(
-
-                    collection(
-                        db,
-                        "records"
-                    ),
-
-                    (snapshot) => {
-
-                        console.log(
-                            "Firestoreリアルタイム更新:",
-                            snapshot.docChanges().length,
-                            "件"
-                        );
-
-
-                        records = [];
-
-
-                        snapshot.forEach(
-                            (docSnap) => {
-
-                                records.push({
-
-                                    id:
-                                        docSnap.id,
-
-                                    ...docSnap.data()
-
-                                });
-                            }
-                        );
-
-
-                        renderTable();
-                    },
-
-
-                    (error) => {
-
-                        console.error(
-                            "Firestoreリアルタイム同期エラー:",
-                            error.code,
-                            error.message
-                        );
-
-
-                        const msgEl =
-                            document.getElementById(
-                                "msg"
-                            );
-
-
-                        if (msgEl) {
-
-                            msgEl.innerText =
-                                "⚠️ リアルタイム同期エラー: " +
-                                error.code;
-                        }
-                    }
-                );
-        }
-
-
-        /* =====================================
            起動ロック解除
         ===================================== */
 
@@ -1074,9 +963,7 @@
 
             const pin =
                 document
-                    .getElementById(
-                        "inputUnlockPin"
-                    )
+                    .getElementById("inputUnlockPin")
                     .value
                     .trim();
 
@@ -1109,8 +996,7 @@
                     .getElementById(
                         "appLockScreen"
                     )
-                    .style.display =
-                        "none";
+                    .style.display = "none";
 
 
                 document
@@ -1165,11 +1051,17 @@
                     );
 
 
+                /*
+                 * adminPinHashは保存しない。
+                 *
+                 * 管理者認証はFirebase Authentication
+                 * に一本化する。
+                 */
+
                 await setDoc(
-
                     settingsRef,
-
                     {
+
                         appUnlockPinHash:
                             appUnlockPinHash,
 
@@ -1184,6 +1076,7 @@
 
                         siteMembers:
                             siteMembers
+
                     }
                 );
 
@@ -1227,6 +1120,7 @@
                     "スタッフのPINや現場リストも初期状態に戻ります。"
                 )
             ) {
+
                 return;
             }
 
@@ -1239,14 +1133,12 @@
 
                 {
                     name: "山田 太郎",
-                    pinHash:
-                        await hashPin("1111")
+                    pinHash: await hashPin("1111")
                 },
 
                 {
                     name: "佐藤 花子",
-                    pinHash:
-                        await hashPin("2222")
+                    pinHash: await hashPin("2222")
                 }
 
             ];
@@ -1302,11 +1194,8 @@
                     "inputAppTitle"
                 );
 
-
             if (titleInput) {
-
-                titleInput.value =
-                    appTitle;
+                titleInput.value = appTitle;
             }
 
 
@@ -1315,20 +1204,16 @@
                     "inputNotificationEmail"
                 );
 
-
             if (emailInput) {
-
                 emailInput.value =
                     notificationEmail;
             }
 
 
             renderStaffOptions();
-
             renderStaffManagementList();
 
             renderSiteOptions();
-
             renderSiteManagementList();
         }
 
@@ -1380,9 +1265,7 @@
 
 
                 const enteredHash =
-                    await hashPin(
-                        currentPin
-                    );
+                    await hashPin(currentPin);
 
 
                 if (
@@ -1397,9 +1280,7 @@
 
 
                 appUnlockPinHash =
-                    await hashPin(
-                        newPin
-                    );
+                    await hashPin(newPin);
 
 
                 const saved =
@@ -1426,6 +1307,7 @@
                         "起動時ロックナンバーを変更したアル！"
                     );
                 }
+
             };
 
 
@@ -1458,8 +1340,7 @@
                 }
 
 
-                appTitle =
-                    newTitle;
+                appTitle = newTitle;
 
 
                 const saved =
@@ -1472,6 +1353,7 @@
                         "タイトルを変更したアル！"
                     );
                 }
+
             };
 
 
@@ -1510,6 +1392,7 @@
                         "通知先メールアドレスを保存したアル！"
                     );
                 }
+
             };
 
 
@@ -1545,15 +1428,15 @@
                 try {
 
                     /*
-                     * リアルタイム監視を停止
+                     * 現在の匿名ユーザーをいったん終了
                      */
 
-                    stopRealtimeRecords();
+                    await signOut(auth);
 
 
                     /*
                      * Firebase Authenticationで
-                     * 管理者ログイン
+                     * メール＋パスワードログイン
                      */
 
                     const result =
@@ -1579,7 +1462,6 @@
                             auth
                         );
 
-                        startRealtimeRecords();
 
                         alert(
                             "このアカウントは管理者として登録されていません。"
@@ -1595,33 +1477,20 @@
                     );
 
 
-                    /*
-                     * 管理者認証完了後に
-                     * リアルタイム監視再開
-                     */
-
-                    startRealtimeRecords();
-
-
                     document
                         .getElementById(
                             "adminPage"
                         )
-                        .style.display =
-                            "block";
+                        .style.display = "block";
 
 
                     window.scrollTo({
-
-                        top:
-                            document
-                                .getElementById(
-                                    "adminPage"
-                                )
-                                .offsetTop,
-
-                        behavior:
-                            "smooth"
+                        top: document
+                            .getElementById(
+                                "adminPage"
+                            )
+                            .offsetTop,
+                        behavior: "smooth"
                     });
 
 
@@ -1641,27 +1510,11 @@
 
                     try {
 
-                        if (
-                            auth.currentUser
-                        ) {
-
-                            await signOut(
-                                auth
-                            );
-                        }
-
-
                         await signInAnonymously(
                             auth
                         );
 
-
-                        startRealtimeRecords();
-
-
-                    } catch (
-                        anonymousError
-                    ) {
+                    } catch (anonymousError) {
 
                         console.error(
                             "匿名再ログイン失敗:",
@@ -1670,29 +1523,13 @@
                     }
 
 
-                    const errorCode =
-                        error &&
-                        error.code
-                            ? error.code
-                            : "unknown";
-
-
-                    const errorMessage =
-                        error &&
-                        error.message
-                            ? error.message
-                            : String(error);
-
-
                     alert(
                         "管理者ログインに失敗しました。\n\n" +
                         "エラーコード: " +
-                        errorCode +
-                        "\n" +
-                        "内容: " +
-                        errorMessage
+                        error.code
                     );
                 }
+
             };
 
 
@@ -1707,18 +1544,16 @@
                     .getElementById(
                         "adminPage"
                     )
-                    .style.display =
-                        "none";
+                    .style.display = "none";
 
+
+                /*
+                 * 管理者アカウントをログアウト
+                 */
 
                 try {
 
-                    stopRealtimeRecords();
-
-
-                    await signOut(
-                        auth
-                    );
+                    await signOut(auth);
 
 
                     /*
@@ -1728,9 +1563,6 @@
                     await signInAnonymously(
                         auth
                     );
-
-
-                    startRealtimeRecords();
 
 
                     console.log(
@@ -1751,6 +1583,7 @@
                         error.message
                     );
                 }
+
             };
 
 
@@ -1804,9 +1637,7 @@
 
             if (
                 staffMembers.some(
-                    s =>
-                        s.name ===
-                        currentVal
+                    s => s.name === currentVal
                 )
             ) {
 
@@ -1854,7 +1685,6 @@
                             "div"
                         );
 
-
                     info.className =
                         "staff-info";
 
@@ -1863,7 +1693,6 @@
                         document.createElement(
                             "span"
                         );
-
 
                     name.textContent =
                         staff.name;
@@ -1874,18 +1703,12 @@
                             "small"
                         );
 
-
                     small.textContent =
                         "ロックナンバー: **** (保護されています)";
 
 
-                    info.appendChild(
-                        name
-                    );
-
-                    info.appendChild(
-                        small
-                    );
+                    info.appendChild(name);
+                    info.appendChild(small);
 
 
                     const button =
@@ -1893,34 +1716,22 @@
                             "button"
                         );
 
-
                     button.className =
                         "btn-delete";
-
 
                     button.textContent =
                         "削除";
 
 
                     button.onclick =
-                        () =>
-                            removeStaff(
-                                index
-                            );
+                        () => removeStaff(index);
 
 
-                    li.appendChild(
-                        info
-                    );
-
-                    li.appendChild(
-                        button
-                    );
+                    li.appendChild(info);
+                    li.appendChild(button);
 
 
-                    list.appendChild(
-                        li
-                    );
+                    list.appendChild(li);
                 }
             );
         }
@@ -1976,9 +1787,7 @@
 
                 if (
                     staffMembers.some(
-                        s =>
-                            s.name ===
-                            name
+                        s => s.name === name
                     )
                 ) {
 
@@ -1989,18 +1798,14 @@
 
 
                 const pinHash =
-                    await hashPin(
-                        pin
-                    );
+                    await hashPin(pin);
 
 
                 staffMembers.push({
 
-                    name:
-                        name,
+                    name: name,
+                    pinHash: pinHash
 
-                    pinHash:
-                        pinHash
                 });
 
 
@@ -2011,7 +1816,6 @@
                 if (saved) {
 
                     inputName.value = "";
-
                     inputPin.value = "";
 
 
@@ -2019,6 +1823,7 @@
                         "新しい従業員を追加したアル！"
                     );
                 }
+
             };
 
 
@@ -2055,6 +1860,7 @@
 
                     await saveSettingsToFirestore();
                 }
+
             };
 
 
@@ -2199,24 +2005,14 @@
 
 
                     button.onclick =
-                        () =>
-                            removeSite(
-                                index
-                            );
+                        () => removeSite(index);
 
 
-                    li.appendChild(
-                        span
-                    );
-
-                    li.appendChild(
-                        button
-                    );
+                    li.appendChild(span);
+                    li.appendChild(button);
 
 
-                    list.appendChild(
-                        li
-                    );
+                    list.appendChild(li);
                 }
             );
         }
@@ -2241,10 +2037,7 @@
                     );
 
 
-                if (
-                    !select ||
-                    !customInput
-                ) {
+                if (!select || !customInput) {
                     return;
                 }
 
@@ -2262,6 +2055,7 @@
                     customInput.style.display =
                         "none";
                 }
+
             };
 
 
@@ -2307,9 +2101,7 @@
                 }
 
 
-                siteMembers.push(
-                    site
-                );
+                siteMembers.push(site);
 
 
                 const saved =
@@ -2317,9 +2109,9 @@
 
 
                 if (saved) {
-
                     input.value = "";
                 }
+
             };
 
 
@@ -2356,6 +2148,7 @@
 
                     await saveSettingsToFirestore();
                 }
+
             };
 
 
@@ -2381,9 +2174,7 @@
 
             const staffObj =
                 staffMembers.find(
-                    s =>
-                        s.name ===
-                        staffName
+                    s => s.name === staffName
                 );
 
 
@@ -2418,7 +2209,7 @@
             ) {
 
                 return alert(
-                    "ロックナンバーが違うアル！本人以外は打刻できないよ！"
+                    "ロックナンバーが違うアル！本人以外は打刻できないヨ！"
                 );
             }
 
@@ -2434,10 +2225,7 @@
                     ).value;
 
 
-                if (
-                    site ===
-                    "__OTHER__"
-                ) {
+                if (site === "__OTHER__") {
 
                     site =
                         document.getElementById(
@@ -2509,6 +2297,7 @@
                         site,
                         locationStr
                     );
+
                 },
 
 
@@ -2526,15 +2315,13 @@
                         site,
                         "取得失敗(許可拒否等)"
                     );
+
                 },
 
 
                 {
-                    timeout:
-                        10000,
-
-                    enableHighAccuracy:
-                        true
+                    timeout: 10000,
+                    enableHighAccuracy: true
                 }
             );
         }
@@ -2560,36 +2347,31 @@
                 const month =
                     String(
                         now.getMonth() + 1
-                    )
-                    .padStart(2, "0");
+                    ).padStart(2, "0");
 
 
                 const day =
                     String(
                         now.getDate()
-                    )
-                    .padStart(2, "0");
+                    ).padStart(2, "0");
 
 
                 const hours =
                     String(
                         now.getHours()
-                    )
-                    .padStart(2, "0");
+                    ).padStart(2, "0");
 
 
                 const minutes =
                     String(
                         now.getMinutes()
-                    )
-                    .padStart(2, "0");
+                    ).padStart(2, "0");
 
 
                 const seconds =
                     String(
                         now.getSeconds()
-                    )
-                    .padStart(2, "0");
+                    ).padStart(2, "0");
 
 
                 const dateTimeStr =
@@ -2608,19 +2390,43 @@
 
                 if (type === "in") {
 
-                    await addDoc(
+                    /*
+                     * すでに勤務中なら、同じスタッフの
+                     * 2重出勤を禁止するアル！
+                     */
+                    const alreadyWorking =
+                        records.some(
+                            r =>
+                                r.staff === staff &&
+                                r.status === "勤務中"
+                        );
 
+
+                    if (alreadyWorking) {
+
+                        document
+                            .getElementById(
+                                "msg"
+                            )
+                            .innerText = "";
+
+
+                        return alert(
+                            `${staff}さんは、もう出勤してるアル！\n同じ日に何度も出勤打刻できないヨ！`
+                        );
+                    }
+
+
+                    await addDoc(
                         collection(
                             db,
                             "records"
                         ),
-
                         {
-                            staff:
-                                staff,
 
-                            site:
-                                site,
+                            staff: staff,
+
+                            site: site,
 
                             clockIn:
                                 dateTimeStr,
@@ -2639,6 +2445,7 @@
 
                             timestamp:
                                 Date.now()
+
                         }
                     );
 
@@ -2648,7 +2455,7 @@
                             "msg"
                         )
                         .innerText =
-                            `${staff} さん、出勤打刻したアル！ (${dateTimeStr})`;
+                        `${staff} さん、出勤打刻したアル！ (${dateTimeStr})`;
 
 
                 } else {
@@ -2656,10 +2463,8 @@
                     const target =
                         records.find(
                             r =>
-                                r.staff ===
-                                    staff &&
-                                r.status ===
-                                    "勤務中"
+                                r.staff === staff &&
+                                r.status === "勤務中"
                         );
 
 
@@ -2673,7 +2478,7 @@
 
 
                         return alert(
-                            "該当する出勤記録が見つからないアル！"
+                            `${staff}さんは、まだ出勤してないアル！\n先に出勤打刻するヨ！`
                         );
                     }
 
@@ -2691,10 +2496,9 @@
 
 
                     await updateDoc(
-
                         recordRef,
-
                         {
+
                             clockOut:
                                 dateTimeStr,
 
@@ -2703,6 +2507,7 @@
 
                             status:
                                 "退勤済み"
+
                         }
                     );
 
@@ -2712,19 +2517,21 @@
                             "msg"
                         )
                         .innerText =
-                            `${staff} さん、退勤打刻したアル！ (${dateTimeStr})`;
+                        `${staff} さん、退勤打刻したアル！ (${dateTimeStr})`;
                 }
 
 
-                /* 通知メール */
+                /*
+                 * 通知メール
+                 */
 
                 if (notificationEmail) {
 
                     sendNotificationEmail(
                         notificationEmail,
                         {
-                            staff:
-                                staff,
+
+                            staff: staff,
 
                             type:
                                 actionTypeStr,
@@ -2738,6 +2545,7 @@
 
                             location:
                                 locationStr
+
                         }
                     );
                 }
@@ -2769,12 +2577,10 @@
         ) {
 
             emailjs.send(
-
                 "service_dis5gyi",
-
                 "template_p2ghsr8",
-
                 {
+
                     to_email:
                         toEmail,
 
@@ -2792,19 +2598,18 @@
 
                     location:
                         data.location
-                }
 
+                }
             )
             .then(
-
                 () => {},
-
                 (err) => {
 
                     console.error(
                         "通知メール送信失敗:",
                         err
                     );
+
                 }
             );
         }
@@ -2860,7 +2665,6 @@
                             "td"
                         );
 
-
                     tdStaff.textContent =
                         r.staff || "-";
 
@@ -2872,7 +2676,6 @@
                             "td"
                         );
 
-
                     tdSite.textContent =
                         r.site || "-";
 
@@ -2883,7 +2686,6 @@
                         document.createElement(
                             "td"
                         );
-
 
                     tdIn.textContent =
                         r.clockIn || "-";
@@ -2923,7 +2725,6 @@
                             "td"
                         );
 
-
                     tdInLoc.innerHTML =
                         formatLocationCell(
                             r.clockInLoc
@@ -2937,7 +2738,6 @@
                             "td"
                         );
 
-
                     tdOut.textContent =
                         r.clockOut || "-";
 
@@ -2948,7 +2748,6 @@
                         document.createElement(
                             "td"
                         );
-
 
                     tdOutLoc.innerHTML =
                         formatLocationCell(
@@ -2979,10 +2778,7 @@
 
 
                     deleteButton.onclick =
-                        () =>
-                            removeRecord(
-                                r.id
-                            );
+                        () => removeRecord(r.id);
 
 
                     tdAction.appendChild(
@@ -2990,42 +2786,17 @@
                     );
 
 
-                    tr.appendChild(
-                        tdStaff
-                    );
-
-                    tr.appendChild(
-                        tdSite
-                    );
-
-                    tr.appendChild(
-                        tdIn
-                    );
-
-                    tr.appendChild(
-                        tdStatus
-                    );
-
-                    tr.appendChild(
-                        tdInLoc
-                    );
-
-                    tr.appendChild(
-                        tdOut
-                    );
-
-                    tr.appendChild(
-                        tdOutLoc
-                    );
-
-                    tr.appendChild(
-                        tdAction
-                    );
+                    tr.appendChild(tdStaff);
+                    tr.appendChild(tdSite);
+                    tr.appendChild(tdIn);
+                    tr.appendChild(tdStatus);
+                    tr.appendChild(tdInLoc);
+                    tr.appendChild(tdOut);
+                    tr.appendChild(tdOutLoc);
+                    tr.appendChild(tdAction);
 
 
-                    tbody.appendChild(
-                        tr
-                    );
+                    tbody.appendChild(tr);
                 }
             );
         }
@@ -3083,31 +2854,11 @@
         function escapeHtml(value) {
 
             return String(value)
-
-                .replace(
-                    /&/g,
-                    "&amp;"
-                )
-
-                .replace(
-                    /</g,
-                    "&lt;"
-                )
-
-                .replace(
-                    />/g,
-                    "&gt;"
-                )
-
-                .replace(
-                    /"/g,
-                    "&quot;"
-                )
-
-                .replace(
-                    /'/g,
-                    "&#039;"
-                );
+                .replace(/&/g, "&amp;")
+                .replace(/</g, "&lt;")
+                .replace(/>/g, "&gt;")
+                .replace(/"/g, "&quot;")
+                .replace(/'/g, "&#039;");
         }
 
 
@@ -3128,6 +2879,7 @@
                         "この打刻データを削除するアルか？"
                     )
                 ) {
+
                     return;
                 }
 
@@ -3135,7 +2887,6 @@
                 try {
 
                     await deleteDoc(
-
                         doc(
                             db,
                             "records",
@@ -3157,6 +2908,7 @@
                         error.message
                     );
                 }
+
             };
 
 
@@ -3185,6 +2937,7 @@
                     "この操作は元に戻せないよ！"
                 )
             ) {
+
                 return;
             }
 
@@ -3279,22 +3032,13 @@
 
 
                     csv +=
-
                         row
-
                             .map(
                                 value =>
                                     `"${String(value)
-                                        .replace(
-                                            /"/g,
-                                            '""'
-                                        )}"`
+                                        .replace(/"/g, '""')}"`
                             )
-
-                            .join(",")
-
-                        +
-
+                            .join(",") +
                         "\n";
                 }
             );
@@ -3307,12 +3051,7 @@
 
             const blob =
                 new Blob(
-
-                    [
-                        "\uFEFF" +
-                        csv
-                    ],
-
+                    ["\uFEFF" + csv],
                     {
                         type:
                             "text/csv;charset=utf-8;"
@@ -3332,30 +3071,19 @@
                 );
 
 
-            a.href =
-                url;
-
+            a.href = url;
 
             a.download =
                 "attendance.csv";
 
 
-            document.body.appendChild(
-                a
-            );
-
+            document.body.appendChild(a);
 
             a.click();
 
+            document.body.removeChild(a);
 
-            document.body.removeChild(
-                a
-            );
-
-
-            URL.revokeObjectURL(
-                url
-            );
+            URL.revokeObjectURL(url);
         }
 
     </script>
@@ -3407,8 +3135,7 @@
 
     <div
         id="employeePage"
-        class="card"
-    >
+        class="card">
 
         <h2 id="appTitleDisplay">
 
@@ -3416,8 +3143,7 @@
 
             <span
                 id="syncStatus"
-                class="sync-badge"
-            >
+                class="sync-badge">
                 リアルタイム同期中
             </span>
 
@@ -3426,14 +3152,14 @@
 
         <div
             class="form-group"
-            style="margin-top: 14px;"
-        >
+            style="margin-top: 14px;">
 
             <label>
                 従業員を選択:
             </label>
 
-            <select id="staffSelect">
+            <select
+                id="staffSelect">
             </select>
 
         </div>
@@ -3447,8 +3173,7 @@
 
             <select
                 id="siteSelect"
-                onchange="window.toggleSiteInput()"
-            >
+                onchange="window.toggleSiteInput()">
             </select>
 
 
@@ -3469,16 +3194,13 @@
 
             <button
                 class="btn-start"
-                id="btnClockIn"
-            >
+                id="btnClockIn">
                 出勤
             </button>
 
-
             <button
                 class="btn-end"
-                id="btnClockOut"
-            >
+                id="btnClockOut">
                 退勤
             </button>
 
@@ -3499,8 +3221,7 @@
 
         <button
             class="btn-lock"
-            id="btnOpenAdmin"
-        >
+            id="btnOpenAdmin">
             🔒 管理者画面へ
         </button>
 
@@ -3542,8 +3263,7 @@
 
             <button
                 class="btn-logout"
-                id="btnCloseAdmin"
-            >
+                id="btnCloseAdmin">
                 🔒 ログアウト
             </button>
 
@@ -3571,11 +3291,9 @@
                 placeholder="アプリタイトル"
             >
 
-
             <button
                 class="btn-add"
-                id="btnUpdateTitle"
-            >
+                id="btnUpdateTitle">
                 保存
             </button>
 
@@ -3590,11 +3308,9 @@
                 placeholder="通知先メールアドレス"
             >
 
-
             <button
                 class="btn-add"
-                id="btnUpdateEmail"
-            >
+                id="btnUpdateEmail">
                 設定
             </button>
 
@@ -3622,7 +3338,6 @@
                     maxlength="8"
                 >
 
-
                 <input
                     type="password"
                     id="inputNewAppPin"
@@ -3630,11 +3345,9 @@
                     maxlength="8"
                 >
 
-
                 <button
                     class="btn-add"
-                    id="btnUpdateAppUnlockPin"
-                >
+                    id="btnUpdateAppUnlockPin">
                     変更
                 </button>
 
@@ -3683,16 +3396,14 @@
 
             <button
                 class="btn-csv"
-                id="btnExportCSV"
-            >
+                id="btnExportCSV">
                 CSV出力
             </button>
 
 
             <button
                 class="btn-clear-all"
-                id="btnClearAllRecords"
-            >
+                id="btnClearAllRecords">
                 ⚠️ 打刻データを全削除
             </button>
 
@@ -3745,8 +3456,7 @@
 
 
                 <tbody
-                    id="attendanceTable"
-                >
+                    id="attendanceTable">
                 </tbody>
 
             </table>
@@ -3807,8 +3517,7 @@
 
         <ul
             id="staffListDisplay"
-            class="staff-list"
-        >
+            class="staff-list">
         </ul>
 
 
@@ -3830,8 +3539,7 @@
 
             <button
                 class="btn-add"
-                id="btnAddSite"
-            >
+                id="btnAddSite">
                 追加
             </button>
 
@@ -3840,8 +3548,7 @@
 
         <ul
             id="siteListDisplay"
-            class="staff-list"
-        >
+            class="staff-list">
         </ul>
 
     </div>
