@@ -645,6 +645,9 @@
             /* Firebaseデータは失敗してもロック操作を止めない */
             await initFirebaseData();
 
+            /* 初回は匿名ユーザーで打刻一覧を監視するアル！ */
+            startRecordsListener();
+
             /* 出退勤 */
 
             document
@@ -903,58 +906,64 @@
    リアルタイム打刻データ
 ===================================== */
 
-onSnapshot(
-    collection(db, "records"),
+/* 認証ユーザーが切り替わるたびに監視を張り直すアル！ */
+let recordsUnsubscribe = null;
 
-    (snapshot) => {
+function startRecordsListener() {
 
-        console.log(
-            "Firestoreリアルタイム更新:",
-            snapshot.docChanges().length,
-            "件"
-        );
+    if (recordsUnsubscribe) {
+        recordsUnsubscribe();
+        recordsUnsubscribe = null;
+    }
 
-        records = [];
+    const syncStatus =
+        document.getElementById("syncStatus");
 
-        const syncStatus =
-            document.getElementById("syncStatus");
+    if (syncStatus) {
+        syncStatus.innerText = "同期確認中…";
+    }
 
-        if (syncStatus) {
-            syncStatus.innerText = "リアルタイム同期中";
-        }
+    recordsUnsubscribe = onSnapshot(
+        collection(db, "records"),
 
-        snapshot.forEach(
-            (docSnap) => {
+        (snapshot) => {
 
+            console.log(
+                "Firestoreリアルタイム更新:",
+                snapshot.docChanges().length,
+                "件"
+            );
+
+            records = [];
+
+            snapshot.forEach((docSnap) => {
                 records.push({
-
                     id: docSnap.id,
                     ...docSnap.data()
-
                 });
+            });
 
+            if (syncStatus) {
+                syncStatus.innerText = "リアルタイム同期中";
             }
-        );
 
-        renderTable();
+            renderTable();
+        },
 
-    },
+        (error) => {
+            console.error(
+                "Firestoreリアルタイム同期エラー:",
+                error
+            );
 
-    (error) => {
+            if (syncStatus) {
+                syncStatus.innerText = "⚠️ 同期エラー";
+            }
 
-        console.error(
-            "Firestoreリアルタイム同期エラー:",
-            error
-        );
-
-        const syncStatus =
-            document.getElementById("syncStatus");
-
-        if (syncStatus) {
-            syncStatus.innerText = "⚠️ 同期エラー";
+            recordsUnsubscribe = null;
         }
-    }
-);
+    );
+}
 
 
             } catch (error) {
@@ -1493,6 +1502,9 @@ onSnapshot(
                         result.user.uid
                     );
 
+                    /* 管理者権限で打刻一覧を再接続するアル！ */
+                    startRecordsListener();
+
 
                     document
                         .getElementById(
@@ -1530,6 +1542,8 @@ onSnapshot(
                         await signInAnonymously(
                             auth
                         );
+
+                        startRecordsListener();
 
                     } catch (anonymousError) {
 
