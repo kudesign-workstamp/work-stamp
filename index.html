@@ -4,6 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>出退勤表(仮)</title>
+
     <style>
         :root {
             --primary: #2563eb;
@@ -16,6 +17,7 @@
             --text-sub: #64748b;
             --border: #cbd5e1;
         }
+
         body {
             font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
             padding: 12px;
@@ -24,9 +26,11 @@
             margin: 0;
             -webkit-tap-highlight-color: transparent;
         }
+
         /* =========================
            起動ロック画面
         ========================= */
+
         #appLockScreen {
             position: fixed;
             top: 0;
@@ -41,6 +45,7 @@
             padding: 20px;
             box-sizing: border-box;
         }
+
         .lock-box {
             background: #ffffff;
             padding: 24px;
@@ -50,6 +55,7 @@
             box-shadow: 0 10px 25px rgba(0,0,0,0.3);
             text-align: center;
         }
+
         .lock-box h2 {
             margin-top: 0;
             color: var(--primary);
@@ -58,11 +64,13 @@
             padding: 0;
             justify-content: center;
         }
+
         .lock-box p {
             font-size: 13px;
             color: var(--text-sub);
             margin-bottom: 20px;
         }
+
         .lock-box input {
             text-align: center;
             letter-spacing: 4px;
@@ -70,6 +78,7 @@
             padding: 10px;
             margin-bottom: 14px;
         }
+
         .lock-box button {
             width: 100%;
             background-color: var(--primary);
@@ -81,6 +90,7 @@
             font-weight: bold;
             cursor: pointer;
         }
+
         .lock-error {
             color: var(--danger);
             font-size: 12px;
@@ -88,9 +98,11 @@
             min-height: 18px;
             font-weight: bold;
         }
+
         /* =========================
            共通
         ========================= */
+
         .card {
             background: var(--card-bg);
             padding: 16px;
@@ -100,6 +112,7 @@
                 0 2px 4px -2px rgba(0, 0, 0, 0.05);
             margin-bottom: 16px;
         }
+
         h2 {
             margin-top: 0;
             color: var(--primary);
@@ -110,20 +123,24 @@
             justify-content: space-between;
             align-items: center;
         }
+
         h3 {
             font-size: 15px;
             color: var(--text-sub);
             margin-bottom: 8px;
             margin-top: 20px;
         }
+
         .form-group {
             margin-bottom: 14px;
         }
+
         .form-group-flex {
             display: flex;
             gap: 8px;
             margin-bottom: 10px;
         }
+
         label {
             font-weight: 600;
             display: block;
@@ -131,6 +148,7 @@
             font-size: 13px;
             color: var(--text-sub);
         }
+
         select,
         input {
             width: 100%;
@@ -142,11 +160,13 @@
             background-color: #fff;
             color: var(--text-main);
         }
+
         .btn-group {
             display: flex;
             gap: 10px;
             margin-top: 18px;
         }
+
         button {
             padding: 14px;
             font-size: 16px;
@@ -158,39 +178,47 @@
             box-shadow: 0 2px 4px rgba(0,0,0,0.1);
             transition: opacity 0.2s;
         }
+
         button:active {
             opacity: 0.8;
         }
+
         .btn-start {
             background-color: var(--success);
             flex: 1;
         }
+
         .btn-end {
             background-color: var(--danger);
             flex: 1;
         }
+
         .btn-add {
             background-color: var(--primary);
             white-space: nowrap;
             padding: 0 16px;
         }
+
         .btn-csv {
             background-color: #0891b2;
             width: 100%;
             font-size: 15px;
         }
+
         .btn-clear-all {
             background-color: #991b1b;
             width: 100%;
             font-size: 15px;
             margin-top: 8px;
         }
+
         .btn-lock {
             background-color: #475569;
             width: 100%;
             font-size: 14px;
             margin-top: 12px;
         }
+
         .btn-delete {
             background-color: var(--danger);
             padding: 6px 10px;
@@ -198,22 +226,26 @@
             border-radius: 6px;
             box-shadow: none;
         }
+
         .btn-logout {
             background-color: #475569;
             padding: 8px 12px;
             font-size: 12px;
         }
+
         .table-container {
             overflow-x: auto;
             border-radius: 8px;
             border: 1px solid var(--border);
         }
+
         table {
             width: 100%;
             border-collapse: collapse;
             min-width: 600px;
             background: #fff;
         }
+
         th,
         td {
             border-bottom: 1px solid #e2e8f0;
@@ -222,14 +254,17 @@
             font-size: 13px;
             white-space: nowrap;
         }
+
         th {
             background-color: #f1f5f9;
             color: var(--text-sub);
             font-weight: 600;
         }
+
         tr:last-child td {
             border-bottom: none;
         }
+
         .badge-working {
             background: #dcfce7;
             color: #166534;
@@ -239,6 +274,7 @@
             font-size: 12px;
             display: inline-block;
         }
+
         .badge-done {
             background: #f1f5f9;
             color: #475569;
@@ -248,11 +284,13 @@
             font-size: 12px;
             display: inline-block;
         }
+
         .staff-list {
             list-style: none;
             padding: 0;
             margin: 0;
         }
+
         .staff-item {
             display: flex;
             justify-content: space-between;
@@ -261,17 +299,21 @@
             border-bottom: 1px solid #f1f5f9;
             font-size: 14px;
         }
+
         .staff-item:last-child {
             border-bottom: none;
         }
+
         .staff-info span {
             font-weight: bold;
         }
+
         .staff-info small {
             display: block;
             color: var(--text-sub);
             font-size: 12px;
         }
+
         #msg {
             color: var(--primary);
             font-weight: bold;
@@ -280,6 +322,7 @@
             font-size: 14px;
             min-height: 20px;
         }
+
         .sync-badge {
             font-size: 11px;
             background: #dcfce7;
@@ -288,33 +331,40 @@
             border-radius: 20px;
             font-weight: normal;
         }
+
         .map-link {
             color: var(--primary);
             text-decoration: underline;
             font-size: 12px;
         }
+
         .admin-status {
             font-size: 12px;
             color: var(--text-sub);
             margin-bottom: 12px;
         }
+
         @media (max-width: 600px) {
             .form-group-flex {
                 flex-direction: column;
             }
+
             .form-group-flex .btn-add {
                 padding: 12px;
                 width: 100%;
             }
         }
     </style>
+
     <!-- =========================
          EmailJS
     ========================= -->
+
     <script
         type="text/javascript"
         src="https://cdn.jsdelivr.net/npm/@emailjs/browser@4/dist/email.min.js">
     </script>
+
     <script type="text/javascript">
         (function() {
             emailjs.init({
@@ -322,13 +372,17 @@
             });
         })();
     </script>
+
     <!-- =========================
          Firebase
     ========================= -->
+
     <script type="module">
+
         import {
             initializeApp
         } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
+
         import {
             getFirestore,
             collection,
@@ -340,6 +394,7 @@
             setDoc,
             getDoc
         } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+
         import {
             getAuth,
             signInAnonymously,
@@ -347,10 +402,15 @@
             signOut,
             onAuthStateChanged
         } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
+
+
         /* =====================================
            Firebase設定
         ===================================== */
-        const ADMIN_UID = "Cvx67XLdEBMMUb9MSfpcDkUqfZD2";
+
+        const ADMIN_UID =
+            "Cvx67XLdEBMMUb9MSfpcDkUqfZD2";
+
         const firebaseConfig = {
             apiKey: "AIzaSyDxVOTA6qpXn4_mPWyiqvINgjb1_k2Jeh8",
             authDomain: "work-stamp-app.firebaseapp.com",
@@ -359,118 +419,185 @@
             messagingSenderId: "978728365973",
             appId: "1:978728365973:web:10c006305a417551061972"
         };
-        const app = initializeApp(firebaseConfig);
-        const db = getFirestore(app);
-        const auth = getAuth(app);
+
+        const app =
+            initializeApp(firebaseConfig);
+
+        const db =
+            getFirestore(app);
+
+        const auth =
+            getAuth(app);
+
+
         /* =====================================
            PINハッシュ
         ===================================== */
+
         async function hashPin(pin) {
+
             if (!pin) {
                 return "";
             }
-            const cleanPin = String(pin).trim();
+
+            const cleanPin =
+                String(pin).trim();
+
             const msgUint8 =
-                new TextEncoder().encode(cleanPin);
+                new TextEncoder().encode(
+                    cleanPin
+                );
+
             const hashBuffer =
                 await crypto.subtle.digest(
                     "SHA-256",
                     msgUint8
                 );
+
             const hashArray =
                 Array.from(
                     new Uint8Array(hashBuffer)
                 );
+
             return hashArray
                 .map(
-                    b => b.toString(16).padStart(2, "0")
+                    b =>
+                        b.toString(16)
+                         .padStart(2, "0")
                 )
                 .join("");
         }
+
+
         /* =====================================
            アプリデータ
         ===================================== */
+
         let appUnlockPinHash = "";
+
         let notificationEmail = "";
+
         let staffMembers = [];
+
         let siteMembers = [
             "現場A",
             "現場B"
         ];
-        let appTitle = "出退勤表(仮)";
+
+        let appTitle =
+            "出退勤表(仮)";
+
         let records = [];
+
+
         /* =====================================
            管理者判定
         ===================================== */
+
         function isAdminUser() {
+
             return !!auth.currentUser &&
-                   auth.currentUser.uid === ADMIN_UID;
+                   auth.currentUser.uid ===
+                   ADMIN_UID;
         }
+
+
         async function requireAdmin() {
+
             if (isAdminUser()) {
                 return true;
             }
+
             alert(
                 "管理者としてログインしてください。"
             );
+
             return false;
         }
+
+
         /* =====================================
            認証初期化
         ===================================== */
+
         async function initAuth() {
+
             try {
+
                 const existingUser =
-                    await new Promise((resolve) => {
-                        const unsubscribe =
-                            onAuthStateChanged(
-                                auth,
-                                (user) => {
-                                    unsubscribe();
-                                    resolve(user);
-                                }
-                            );
-                    });
+                    await new Promise(
+                        (resolve) => {
+
+                            const unsubscribe =
+                                onAuthStateChanged(
+                                    auth,
+                                    (user) => {
+
+                                        unsubscribe();
+
+                                        resolve(user);
+                                    }
+                                );
+                        }
+                    );
+
+
                 /*
                  * 前回管理者ログインが残っている場合、
                  * 起動時には匿名ユーザーへ戻す。
-                 *
-                 * これにより、共有端末で
-                 * 管理者画面がログイン状態のまま
-                 * 残るのを防ぐ。
                  */
+
                 if (
                     existingUser &&
                     existingUser.uid === ADMIN_UID
                 ) {
+
                     await signOut(auth);
+
                     const result =
-                        await signInAnonymously(auth);
+                        await signInAnonymously(
+                            auth
+                        );
+
                     console.log(
                         "管理者セッションを解除して匿名認証:",
                         result.user.uid
                     );
+
                     return true;
                 }
+
+
                 if (existingUser) {
+
                     console.log(
                         "既存の認証状態を確認:",
                         existingUser.uid
                     );
+
                     return true;
                 }
+
+
                 const result =
-                    await signInAnonymously(auth);
+                    await signInAnonymously(
+                        auth
+                    );
+
                 console.log(
                     "匿名認証OK:",
                     result.user.uid
                 );
+
                 return true;
+
             } catch (error) {
+
                 console.error(
                     "認証失敗:",
                     error
                 );
+
                 alert(
                     "通信認証に失敗しました。\n\n" +
                     "エラーコード: " +
@@ -479,314 +606,529 @@
                     "内容: " +
                     error.message
                 );
+
                 return false;
             }
         }
+
+
         /* =====================================
            ページ起動
         ===================================== */
-        window.onload = async function() {
-            const authSuccess =
-                await initAuth();
-            if (!authSuccess) {
-                return;
-            }
-            await initFirebaseData();
-            /* 起動ロック */
-            document
-                .getElementById("btnUnlockApp")
-                .onclick = verifyAppUnlock;
-            document
-                .getElementById("inputUnlockPin")
-                .onkeypress = (e) => {
-                    if (e.key === "Enter") {
-                        verifyAppUnlock();
-                    }
-                };
-            /* 出退勤 */
-            document
-                .getElementById("btnClockIn")
-                .onclick = () => handleClock("in");
-            document
-                .getElementById("btnClockOut")
-                .onclick = () => handleClock("out");
-            /* 管理者 */
-            document
-                .getElementById("btnOpenAdmin")
-                .onclick = openAdminPage;
-            document
-                .getElementById("btnCloseAdmin")
-                .onclick = closeAdminPage;
-            document
-                .getElementById("btnUpdateTitle")
-                .onclick = updateTitle;
-            document
-                .getElementById("btnUpdateEmail")
-                .onclick = updateEmail;
-            document
-                .getElementById("btnUpdateAppUnlockPin")
-                .onclick = updateAppUnlockPin;
-            document
-                .getElementById("btnResetSettings")
-                .onclick = resetSettingsToDefault;
-            document
-                .getElementById("btnExportCSV")
-                .onclick = exportToCSV;
-            document
-                .getElementById("btnClearAllRecords")
-                .onclick = clearAllRecords;
-            document
-                .getElementById("btnAddStaff")
-                .onclick = addStaff;
-            document
-                .getElementById("btnAddSite")
-                .onclick = addSite;
-        };
+
+        window.onload =
+            async function() {
+
+                const authSuccess =
+                    await initAuth();
+
+                if (!authSuccess) {
+                    return;
+                }
+
+
+                await initFirebaseData();
+
+
+                /*
+                 * Firebaseデータ読み込み完了後に
+                 * リアルタイム同期を開始
+                 */
+                startRealtimeRecords();
+
+
+                /* 起動ロック */
+
+                document
+                    .getElementById(
+                        "btnUnlockApp"
+                    )
+                    .onclick =
+                        verifyAppUnlock;
+
+                document
+                    .getElementById(
+                        "inputUnlockPin"
+                    )
+                    .onkeypress =
+                        (e) => {
+
+                            if (e.key === "Enter") {
+                                verifyAppUnlock();
+                            }
+                        };
+
+
+                /* 出退勤 */
+
+                document
+                    .getElementById(
+                        "btnClockIn"
+                    )
+                    .onclick =
+                        () => handleClock("in");
+
+                document
+                    .getElementById(
+                        "btnClockOut"
+                    )
+                    .onclick =
+                        () => handleClock("out");
+
+
+                /* 管理者 */
+
+                document
+                    .getElementById(
+                        "btnOpenAdmin"
+                    )
+                    .onclick =
+                        openAdminPage;
+
+                document
+                    .getElementById(
+                        "btnCloseAdmin"
+                    )
+                    .onclick =
+                        closeAdminPage;
+
+                document
+                    .getElementById(
+                        "btnUpdateTitle"
+                    )
+                    .onclick =
+                        updateTitle;
+
+                document
+                    .getElementById(
+                        "btnUpdateEmail"
+                    )
+                    .onclick =
+                        updateEmail;
+
+                document
+                    .getElementById(
+                        "btnUpdateAppUnlockPin"
+                    )
+                    .onclick =
+                        updateAppUnlockPin;
+
+                document
+                    .getElementById(
+                        "btnResetSettings"
+                    )
+                    .onclick =
+                        resetSettingsToDefault;
+
+                document
+                    .getElementById(
+                        "btnExportCSV"
+                    )
+                    .onclick =
+                        exportToCSV;
+
+                document
+                    .getElementById(
+                        "btnClearAllRecords"
+                    )
+                    .onclick =
+                        clearAllRecords;
+
+                document
+                    .getElementById(
+                        "btnAddStaff"
+                    )
+                    .onclick =
+                        addStaff;
+
+                document
+                    .getElementById(
+                        "btnAddSite"
+                    )
+                    .onclick =
+                        addSite;
+            };
+
+
         /* =====================================
            Firebaseデータ読み込み
         ===================================== */
+
         async function initFirebaseData() {
+
             try {
+
                 const settingsRef =
                     doc(
                         db,
                         "settings",
                         "config"
                     );
+
                 const settingsSnap =
-                    await getDoc(settingsRef);
+                    await getDoc(
+                        settingsRef
+                    );
+
+
                 const defaultAppUnlockHash =
                     await hashPin("1234");
+
+
                 const defaultStaff = [
+
                     {
                         name: "山田 太郎",
-                        pinHash: await hashPin("1111")
+                        pinHash:
+                            await hashPin("1111")
                     },
+
                     {
                         name: "佐藤 花子",
-                        pinHash: await hashPin("2222")
+                        pinHash:
+                            await hashPin("2222")
                     }
+
                 ];
+
+
                 if (settingsSnap.exists()) {
+
                     const data =
                         settingsSnap.data();
+
+
                     appUnlockPinHash =
                         data.appUnlockPinHash ||
                         defaultAppUnlockHash;
+
+
                     appTitle =
                         data.appTitle ||
                         "出退勤表(仮)";
+
+
                     notificationEmail =
                         data.notificationEmail ||
                         "";
+
+
                     siteMembers =
-                        Array.isArray(data.siteMembers)
+                        Array.isArray(
+                            data.siteMembers
+                        )
                             ? data.siteMembers
-                            : ["現場A", "現場B"];
+                            : [
+                                "現場A",
+                                "現場B"
+                            ];
+
+
                     if (
                         data.staffMembers &&
                         data.staffMembers.length > 0
                     ) {
+
                         staffMembers =
                             await Promise.all(
+
                                 data.staffMembers.map(
                                     async (staff) => {
+
                                         let pHash =
                                             staff.pinHash;
+
+
                                         /*
                                          * 古いデータに
-                                         * PINが直接入っていた場合の
-                                         * 移行処理
+                                         * PINが直接入っていた場合
                                          */
+
                                         if (
                                             !pHash &&
                                             staff.pin
                                         ) {
+
                                             pHash =
                                                 await hashPin(
                                                     staff.pin
                                                 );
                                         }
+
+
                                         /*
                                          * それでもPINが無い場合
                                          */
+
                                         if (!pHash) {
+
                                             if (
                                                 staff.name ===
                                                 "山田 太郎"
                                             ) {
+
                                                 pHash =
                                                     await hashPin(
                                                         "1111"
                                                     );
+
                                             } else if (
                                                 staff.name ===
                                                 "佐藤 花子"
                                             ) {
+
                                                 pHash =
                                                     await hashPin(
                                                         "2222"
                                                     );
+
                                             } else {
+
                                                 pHash =
                                                     await hashPin(
                                                         "0000"
                                                     );
                                             }
                                         }
+
+
                                         return {
-                                            name: staff.name,
-                                            pinHash: pHash
+                                            name:
+                                                staff.name,
+                                            pinHash:
+                                                pHash
                                         };
                                     }
                                 )
                             );
+
                     } else {
+
                         staffMembers =
                             defaultStaff;
                     }
+
+
                 } else {
+
                     /*
-                     * 初回起動。
+                     * 初回起動
                      *
                      * 匿名ユーザーでは
                      * settingsを書き込まない。
-                     * 管理者ログイン後に保存する。
                      */
+
                     appUnlockPinHash =
                         defaultAppUnlockHash;
+
                     staffMembers =
                         defaultStaff;
+
                     siteMembers = [
                         "現場A",
                         "現場B"
                     ];
+
                     appTitle =
                         "出退勤表(仮)";
+
                     notificationEmail = "";
                 }
+
+
                 updateUI();
-/* =====================================
-   リアルタイム打刻データ
-===================================== */
-let unsubscribeRecords = null;
 
-function stopRealtimeRecords() {
-    if (unsubscribeRecords) {
-        unsubscribeRecords();
-        unsubscribeRecords = null;
-        console.log(
-            "Firestoreリアルタイム同期を停止"
-        );
-    }
-}
 
-function startRealtimeRecords() {
-    stopRealtimeRecords();
-
-    if (!auth.currentUser) {
-        console.warn(
-            "認証ユーザーがいないため、リアルタイム同期を開始しません"
-        );
-        return;
-    }
-
-    console.log(
-        "Firestoreリアルタイム同期を開始:",
-        auth.currentUser.uid
-    );
-
-    unsubscribeRecords = onSnapshot(
-        collection(db, "records"),
-        (snapshot) => {
-            console.log(
-                "Firestoreリアルタイム更新:",
-                snapshot.docChanges().length,
-                "件"
-            );
-
-            records = [];
-
-            snapshot.forEach(
-                (docSnap) => {
-                    records.push({
-                        id: docSnap.id,
-                        ...docSnap.data()
-                    });
-                }
-            );
-
-            renderTable();
-        },
-        (error) => {
-            console.error(
-                "Firestoreリアルタイム同期エラー:",
-                error.code,
-                error.message
-            );
-
-            const msgEl =
-                document.getElementById("msg");
-
-            if (msgEl) {
-                msgEl.innerText =
-                    "⚠️ リアルタイム同期エラー: " +
-                    error.code;
-            }
-        }
-    );
-}
-
-startRealtimeRecords();
             } catch (error) {
+
                 console.error(
                     "Firebaseデータ読み込み失敗:",
                     error
                 );
+
                 alert(
                     "Firebaseのデータ読み込みに失敗しました。\n\n" +
                     error.message
                 );
             }
         }
+
+
+        /* =====================================
+           リアルタイム打刻データ
+        ===================================== */
+
+        let unsubscribeRecords = null;
+
+
+        function stopRealtimeRecords() {
+
+            if (unsubscribeRecords) {
+
+                unsubscribeRecords();
+
+                unsubscribeRecords = null;
+
+                console.log(
+                    "Firestoreリアルタイム同期を停止"
+                );
+            }
+        }
+
+
+        function startRealtimeRecords() {
+
+            /*
+             * すでに監視中なら一度停止
+             */
+
+            stopRealtimeRecords();
+
+
+            if (!auth.currentUser) {
+
+                console.warn(
+                    "認証ユーザーがいないため、リアルタイム同期を開始しません"
+                );
+
+                return;
+            }
+
+
+            console.log(
+                "Firestoreリアルタイム同期を開始:",
+                auth.currentUser.uid
+            );
+
+
+            unsubscribeRecords =
+                onSnapshot(
+
+                    collection(
+                        db,
+                        "records"
+                    ),
+
+                    (snapshot) => {
+
+                        console.log(
+                            "Firestoreリアルタイム更新:",
+                            snapshot.docChanges().length,
+                            "件"
+                        );
+
+
+                        records = [];
+
+
+                        snapshot.forEach(
+                            (docSnap) => {
+
+                                records.push({
+
+                                    id:
+                                        docSnap.id,
+
+                                    ...docSnap.data()
+
+                                });
+                            }
+                        );
+
+
+                        renderTable();
+                    },
+
+
+                    (error) => {
+
+                        console.error(
+                            "Firestoreリアルタイム同期エラー:",
+                            error.code,
+                            error.message
+                        );
+
+
+                        const msgEl =
+                            document.getElementById(
+                                "msg"
+                            );
+
+
+                        if (msgEl) {
+
+                            msgEl.innerText =
+                                "⚠️ リアルタイム同期エラー: " +
+                                error.code;
+                        }
+                    }
+                );
+        }
+
+
         /* =====================================
            起動ロック解除
         ===================================== */
+
         async function verifyAppUnlock() {
+
             const pin =
                 document
-                    .getElementById("inputUnlockPin")
+                    .getElementById(
+                        "inputUnlockPin"
+                    )
                     .value
                     .trim();
+
+
             const errEl =
                 document.getElementById(
                     "lockErrorMsg"
                 );
+
+
             if (!pin) {
+
                 errEl.innerText =
                     "パスコードを入力するアル！";
+
                 return;
             }
+
+
             const enteredHash =
                 await hashPin(pin);
+
+
             if (
                 enteredHash ===
                 appUnlockPinHash
             ) {
+
                 document
                     .getElementById(
                         "appLockScreen"
                     )
-                    .style.display = "none";
+                    .style.display =
+                        "none";
+
+
                 document
                     .getElementById(
                         "inputUnlockPin"
                     )
                     .value = "";
+
+
                 errEl.innerText = "";
+
+
             } else {
+
                 errEl.innerText =
                     "パスコードが違うアル！";
+
+
                 document
                     .getElementById(
                         "inputUnlockPin"
@@ -794,66 +1136,91 @@ startRealtimeRecords();
                     .value = "";
             }
         }
+
+
         /* =====================================
            設定保存
         ===================================== */
+
         async function saveSettingsToFirestore() {
+
             if (!isAdminUser()) {
+
                 alert(
                     "管理者としてログインしていないため、" +
                     "設定を保存できません。"
                 );
+
                 return false;
             }
+
+
             try {
+
                 const settingsRef =
                     doc(
                         db,
                         "settings",
                         "config"
                     );
-                /*
-                 * adminPinHashは保存しない。
-                 *
-                 * 管理者認証はFirebase Authentication
-                 * に一本化する。
-                 */
+
+
                 await setDoc(
+
                     settingsRef,
+
                     {
                         appUnlockPinHash:
                             appUnlockPinHash,
+
                         appTitle:
                             appTitle,
+
                         notificationEmail:
                             notificationEmail,
+
                         staffMembers:
                             staffMembers,
+
                         siteMembers:
                             siteMembers
                     }
                 );
+
+
                 updateUI();
+
                 return true;
+
+
             } catch (error) {
+
                 console.error(
                     "設定保存エラー:",
                     error
                 );
+
                 alert(
                     "設定の保存に失敗しました。\n\n" +
                     error.message
                 );
+
                 return false;
             }
         }
+
+
         /* =====================================
            設定初期化
         ===================================== */
+
         async function resetSettingsToDefault() {
+
             if (!await requireAdmin()) {
                 return;
             }
+
+
             if (
                 !confirm(
                     "設定を初期化するアル？\n" +
@@ -862,73 +1229,122 @@ startRealtimeRecords();
             ) {
                 return;
             }
+
+
             appUnlockPinHash =
                 await hashPin("1234");
+
+
             staffMembers = [
+
                 {
                     name: "山田 太郎",
-                    pinHash: await hashPin("1111")
+                    pinHash:
+                        await hashPin("1111")
                 },
+
                 {
                     name: "佐藤 花子",
-                    pinHash: await hashPin("2222")
+                    pinHash:
+                        await hashPin("2222")
                 }
+
             ];
+
+
             siteMembers = [
                 "現場A",
                 "現場B"
             ];
+
+
             appTitle =
                 "出退勤表(仮)";
+
+
             notificationEmail = "";
+
+
             const saved =
                 await saveSettingsToFirestore();
+
+
             if (saved) {
+
                 alert(
                     "設定を初期化したアル！"
                 );
             }
         }
+
+
         /* =====================================
            UI更新
         ===================================== */
+
         function updateUI() {
+
             const titleEl =
                 document.getElementById(
                     "appTitleDisplay"
                 );
+
+
             if (titleEl) {
+
                 titleEl.childNodes[0].nodeValue =
                     appTitle + " ";
             }
+
+
             const titleInput =
                 document.getElementById(
                     "inputAppTitle"
                 );
+
+
             if (titleInput) {
-                titleInput.value = appTitle;
+
+                titleInput.value =
+                    appTitle;
             }
+
+
             const emailInput =
                 document.getElementById(
                     "inputNotificationEmail"
                 );
+
+
             if (emailInput) {
+
                 emailInput.value =
                     notificationEmail;
             }
+
+
             renderStaffOptions();
+
             renderStaffManagementList();
+
             renderSiteOptions();
+
             renderSiteManagementList();
         }
+
+
         /* =====================================
            起動ロックPIN変更
         ===================================== */
+
         window.updateAppUnlockPin =
             async function() {
+
                 if (!await requireAdmin()) {
                     return;
                 }
+
+
                 const currentPin =
                     document
                         .getElementById(
@@ -936,6 +1352,8 @@ startRealtimeRecords();
                         )
                         .value
                         .trim();
+
+
                 const newPin =
                     document
                         .getElementById(
@@ -943,54 +1361,86 @@ startRealtimeRecords();
                         )
                         .value
                         .trim();
+
+
                 if (!currentPin) {
+
                     return alert(
                         "現在の起動用ロックナンバーを入力するアル！"
                     );
                 }
+
+
                 if (!newPin) {
+
                     return alert(
                         "新しい起動用ロックナンバーを入力するアル！"
                     );
                 }
+
+
                 const enteredHash =
-                    await hashPin(currentPin);
+                    await hashPin(
+                        currentPin
+                    );
+
+
                 if (
                     enteredHash !==
                     appUnlockPinHash
                 ) {
+
                     return alert(
                         "現在の起動用ロックナンバーが違います！"
                     );
                 }
+
+
                 appUnlockPinHash =
-                    await hashPin(newPin);
+                    await hashPin(
+                        newPin
+                    );
+
+
                 const saved =
                     await saveSettingsToFirestore();
+
+
                 if (saved) {
+
                     document
                         .getElementById(
                             "inputCurrentAppPin"
                         )
                         .value = "";
+
+
                     document
                         .getElementById(
                             "inputNewAppPin"
                         )
                         .value = "";
+
+
                     alert(
                         "起動時ロックナンバーを変更したアル！"
                     );
                 }
             };
+
+
         /* =====================================
            タイトル変更
         ===================================== */
+
         window.updateTitle =
             async function() {
+
                 if (!await requireAdmin()) {
                     return;
                 }
+
+
                 const newTitle =
                     document
                         .getElementById(
@@ -998,28 +1448,45 @@ startRealtimeRecords();
                         )
                         .value
                         .trim();
+
+
                 if (!newTitle) {
+
                     return alert(
                         "タイトルを入力するアル！"
                     );
                 }
-                appTitle = newTitle;
+
+
+                appTitle =
+                    newTitle;
+
+
                 const saved =
                     await saveSettingsToFirestore();
+
+
                 if (saved) {
+
                     alert(
                         "タイトルを変更したアル！"
                     );
                 }
             };
+
+
         /* =====================================
            通知メール変更
         ===================================== */
+
         window.updateEmail =
             async function() {
+
                 if (!await requireAdmin()) {
                     return;
                 }
+
+
                 const email =
                     document
                         .getElementById(
@@ -1027,123 +1494,196 @@ startRealtimeRecords();
                         )
                         .value
                         .trim();
+
+
                 notificationEmail =
                     email;
+
+
                 const saved =
                     await saveSettingsToFirestore();
+
+
                 if (saved) {
+
                     alert(
                         "通知先メールアドレスを保存したアル！"
                     );
                 }
             };
+
+
         /* =====================================
            管理者ログイン
         ===================================== */
+
         window.openAdminPage =
             async function() {
+
                 const email =
                     prompt(
                         "管理者のメールアドレスを入力してください："
                     );
+
+
                 if (email === null) {
                     return;
                 }
+
+
                 const password =
                     prompt(
                         "管理者のパスワードを入力してください："
                     );
+
+
                 if (password === null) {
                     return;
                 }
+
+
                 try {
-                    /*
-                     * リアルタイム監視をいったん停止
-                     * （認証ユーザー切り替え中のpermission-denied防止）
-                     */
-                    stopRealtimeRecords();
 
                     /*
-                     * 匿名ユーザーを先にsignOutしない。
-                     * signInWithEmailAndPassword() が
-                     * 認証ユーザーを切り替えるため、
-                     * 途中で auth.currentUser が null になる時間を作らない。
+                     * リアルタイム監視を停止
                      */
+
+                    stopRealtimeRecords();
+
+
+                    /*
+                     * Firebase Authenticationで
+                     * 管理者ログイン
+                     */
+
                     const result =
                         await signInWithEmailAndPassword(
                             auth,
                             email.trim(),
                             password
                         );
+
+
                     /*
                      * UIDを確認
                      */
+
                     if (
                         result.user.uid !==
                         ADMIN_UID
                     ) {
+
                         await signOut(auth);
+
                         await signInAnonymously(
                             auth
                         );
+
+                        startRealtimeRecords();
+
                         alert(
                             "このアカウントは管理者として登録されていません。"
                         );
+
                         return;
                     }
+
+
                     console.log(
                         "管理者ログインOK:",
                         result.user.uid
                     );
 
+
                     /*
-                     * 管理者認証が完了してから
-                     * リアルタイム監視を再開
+                     * 管理者認証完了後に
+                     * リアルタイム監視再開
                      */
+
                     startRealtimeRecords();
+
 
                     document
                         .getElementById(
                             "adminPage"
                         )
-                        .style.display = "block";
+                        .style.display =
+                            "block";
+
+
                     window.scrollTo({
-                        top: document
-                            .getElementById(
-                                "adminPage"
-                            )
-                            .offsetTop,
-                        behavior: "smooth"
+
+                        top:
+                            document
+                                .getElementById(
+                                    "adminPage"
+                                )
+                                .offsetTop,
+
+                        behavior:
+                            "smooth"
                     });
+
+
                 } catch (error) {
+
                     console.error(
                         "管理者ログイン失敗:",
                         error.code,
                         error.message
                     );
+
+
                     /*
                      * ログイン失敗時は
                      * 匿名ユーザーに戻す
                      */
+
                     try {
+
+                        if (
+                            auth.currentUser
+                        ) {
+
+                            await signOut(
+                                auth
+                            );
+                        }
+
+
                         await signInAnonymously(
                             auth
                         );
+
+
                         startRealtimeRecords();
-                    } catch (anonymousError) {
+
+
+                    } catch (
+                        anonymousError
+                    ) {
+
                         console.error(
                             "匿名再ログイン失敗:",
                             anonymousError
                         );
                     }
+
+
                     const errorCode =
-                        error && error.code
+                        error &&
+                        error.code
                             ? error.code
                             : "unknown";
+
+
                     const errorMessage =
-                        error && error.message
+                        error &&
+                        error.message
                             ? error.message
                             : String(error);
+
+
                     alert(
                         "管理者ログインに失敗しました。\n\n" +
                         "エラーコード: " +
@@ -1154,207 +1694,351 @@ startRealtimeRecords();
                     );
                 }
             };
+
+
         /* =====================================
            管理者画面を閉じる
         ===================================== */
+
         window.closeAdminPage =
             async function() {
+
                 document
                     .getElementById(
                         "adminPage"
                     )
-                    .style.display = "none";
-                /*
-                 * 管理者アカウントをログアウト
-                 */
+                    .style.display =
+                        "none";
+
+
                 try {
+
                     stopRealtimeRecords();
 
-                    await signOut(auth);
+
+                    await signOut(
+                        auth
+                    );
+
 
                     /*
                      * 一般利用用の匿名ログインへ戻す
                      */
+
                     await signInAnonymously(
                         auth
                     );
 
+
                     startRealtimeRecords();
+
 
                     console.log(
                         "管理者ログアウト → 匿名認証"
                     );
+
+
                 } catch (error) {
+
                     console.error(
                         "管理者ログアウトエラー:",
                         error
                     );
+
+
                     alert(
                         "管理者ログアウトに失敗しました。\n\n" +
                         error.message
                     );
                 }
             };
+
+
         /* =====================================
            従業員選択肢
         ===================================== */
+
         function renderStaffOptions() {
+
             const select =
                 document.getElementById(
                     "staffSelect"
                 );
+
+
             if (!select) {
                 return;
             }
+
+
             const currentVal =
                 select.value;
+
+
             select.innerHTML = "";
+
+
             staffMembers.forEach(
                 function(staff) {
+
                     const option =
                         document.createElement(
                             "option"
                         );
+
+
                     option.value =
                         staff.name;
+
+
                     option.textContent =
                         staff.name;
+
+
                     select.appendChild(
                         option
                     );
                 }
             );
+
+
             if (
                 staffMembers.some(
-                    s => s.name === currentVal
+                    s =>
+                        s.name ===
+                        currentVal
                 )
             ) {
+
                 select.value =
                     currentVal;
             }
         }
+
+
         /* =====================================
            従業員管理リスト
         ===================================== */
+
         function renderStaffManagementList() {
+
             const list =
                 document.getElementById(
                     "staffListDisplay"
                 );
+
+
             if (!list) {
                 return;
             }
+
+
             list.innerHTML = "";
+
+
             staffMembers.forEach(
                 function(staff, index) {
+
                     const li =
                         document.createElement(
                             "li"
                         );
+
+
                     li.className =
                         "staff-item";
+
+
                     const info =
                         document.createElement(
                             "div"
                         );
+
+
                     info.className =
                         "staff-info";
+
+
                     const name =
                         document.createElement(
                             "span"
                         );
+
+
                     name.textContent =
                         staff.name;
+
+
                     const small =
                         document.createElement(
                             "small"
                         );
+
+
                     small.textContent =
                         "ロックナンバー: **** (保護されています)";
-                    info.appendChild(name);
-                    info.appendChild(small);
+
+
+                    info.appendChild(
+                        name
+                    );
+
+                    info.appendChild(
+                        small
+                    );
+
+
                     const button =
                         document.createElement(
                             "button"
                         );
+
+
                     button.className =
                         "btn-delete";
+
+
                     button.textContent =
                         "削除";
+
+
                     button.onclick =
-                        () => removeStaff(index);
-                    li.appendChild(info);
-                    li.appendChild(button);
-                    list.appendChild(li);
+                        () =>
+                            removeStaff(
+                                index
+                            );
+
+
+                    li.appendChild(
+                        info
+                    );
+
+                    li.appendChild(
+                        button
+                    );
+
+
+                    list.appendChild(
+                        li
+                    );
                 }
             );
         }
+
+
         /* =====================================
            従業員追加
         ===================================== */
+
         window.addStaff =
             async function() {
+
                 if (!await requireAdmin()) {
                     return;
                 }
+
+
                 const inputName =
                     document.getElementById(
                         "newStaffName"
                     );
+
+
                 const inputPin =
                     document.getElementById(
                         "newStaffPin"
                     );
+
+
                 const name =
                     inputName.value.trim();
+
+
                 const pin =
                     inputPin.value.trim();
+
+
                 if (!name) {
+
                     return alert(
                         "従業員名を入力するアル！"
                     );
                 }
+
+
                 if (!pin) {
+
                     return alert(
                         "従業員のロックナンバーを入力するアル！"
                     );
                 }
+
+
                 if (
                     staffMembers.some(
-                        s => s.name === name
+                        s =>
+                            s.name ===
+                            name
                     )
                 ) {
+
                     return alert(
                         "もう登録されている名前アル！"
                     );
                 }
+
+
                 const pinHash =
-                    await hashPin(pin);
+                    await hashPin(
+                        pin
+                    );
+
+
                 staffMembers.push({
-                    name: name,
-                    pinHash: pinHash
+
+                    name:
+                        name,
+
+                    pinHash:
+                        pinHash
                 });
+
+
                 const saved =
                     await saveSettingsToFirestore();
+
+
                 if (saved) {
+
                     inputName.value = "";
+
                     inputPin.value = "";
+
+
                     alert(
                         "新しい従業員を追加したアル！"
                     );
                 }
             };
+
+
         /* =====================================
            従業員削除
         ===================================== */
+
         window.removeStaff =
             async function(index) {
+
                 if (!await requireAdmin()) {
                     return;
                 }
+
+
                 if (!staffMembers[index]) {
                     return;
                 }
+
+
                 if (
                     confirm(
                         "「" +
@@ -1362,179 +2046,300 @@ startRealtimeRecords();
                         "」を削除するアルか？"
                     )
                 ) {
+
                     staffMembers.splice(
                         index,
                         1
                     );
+
+
                     await saveSettingsToFirestore();
                 }
             };
+
+
         /* =====================================
            現場選択肢
         ===================================== */
+
         function renderSiteOptions() {
+
             const select =
                 document.getElementById(
                     "siteSelect"
                 );
+
+
             if (!select) {
                 return;
             }
+
+
             const currentVal =
                 select.value;
+
+
             select.innerHTML = "";
+
+
             siteMembers.forEach(
                 function(site) {
+
                     const option =
                         document.createElement(
                             "option"
                         );
+
+
                     option.value =
                         site;
+
+
                     option.textContent =
                         site;
+
+
                     select.appendChild(
                         option
                     );
                 }
             );
+
+
             const customOption =
                 document.createElement(
                     "option"
                 );
+
+
             customOption.value =
                 "__OTHER__";
+
+
             customOption.textContent =
                 "【直接入力する】";
+
+
             select.appendChild(
                 customOption
             );
+
+
             if (
                 siteMembers.includes(
                     currentVal
                 ) ||
                 currentVal === "__OTHER__"
             ) {
+
                 select.value =
                     currentVal;
             }
+
+
             window.toggleSiteInput();
         }
+
+
         /* =====================================
            現場管理リスト
         ===================================== */
+
         function renderSiteManagementList() {
+
             const list =
                 document.getElementById(
                     "siteListDisplay"
                 );
+
+
             if (!list) {
                 return;
             }
+
+
             list.innerHTML = "";
+
+
             siteMembers.forEach(
                 function(site, index) {
+
                     const li =
                         document.createElement(
                             "li"
                         );
+
+
                     li.className =
                         "staff-item";
+
+
                     const span =
                         document.createElement(
                             "span"
                         );
+
+
                     span.textContent =
                         site;
+
+
                     const button =
                         document.createElement(
                             "button"
                         );
+
+
                     button.className =
                         "btn-delete";
+
+
                     button.textContent =
                         "削除";
+
+
                     button.onclick =
-                        () => removeSite(index);
-                    li.appendChild(span);
-                    li.appendChild(button);
-                    list.appendChild(li);
+                        () =>
+                            removeSite(
+                                index
+                            );
+
+
+                    li.appendChild(
+                        span
+                    );
+
+                    li.appendChild(
+                        button
+                    );
+
+
+                    list.appendChild(
+                        li
+                    );
                 }
             );
         }
+
+
         /* =====================================
            現場直接入力表示
         ===================================== */
+
         window.toggleSiteInput =
             function() {
+
                 const select =
                     document.getElementById(
                         "siteSelect"
                     );
+
+
                 const customInput =
                     document.getElementById(
                         "customSiteName"
                     );
-                if (!select || !customInput) {
+
+
+                if (
+                    !select ||
+                    !customInput
+                ) {
                     return;
                 }
+
+
                 if (
                     select.value ===
                     "__OTHER__"
                 ) {
+
                     customInput.style.display =
                         "block";
+
                 } else {
+
                     customInput.style.display =
                         "none";
                 }
             };
+
+
         /* =====================================
            現場追加
         ===================================== */
+
         window.addSite =
             async function() {
+
                 if (!await requireAdmin()) {
                     return;
                 }
+
+
                 const input =
                     document.getElementById(
                         "newSiteName"
                     );
+
+
                 const site =
                     input.value.trim();
+
+
                 if (!site) {
+
                     return alert(
                         "現場名を入力するアル！"
                     );
                 }
+
+
                 if (
                     siteMembers.indexOf(
                         site
                     ) !== -1
                 ) {
+
                     return alert(
                         "もう登録されているアル！"
                     );
                 }
-                siteMembers.push(site);
+
+
+                siteMembers.push(
+                    site
+                );
+
+
                 const saved =
                     await saveSettingsToFirestore();
+
+
                 if (saved) {
+
                     input.value = "";
                 }
             };
+
+
         /* =====================================
            現場削除
         ===================================== */
+
         window.removeSite =
             async function(index) {
+
                 if (!await requireAdmin()) {
                     return;
                 }
+
+
                 if (!siteMembers[index]) {
                     return;
                 }
+
+
                 if (
                     confirm(
                         "「" +
@@ -1542,101 +2347,162 @@ startRealtimeRecords();
                         "」を削除するアルか？"
                     )
                 ) {
+
                     siteMembers.splice(
                         index,
                         1
                     );
+
+
                     await saveSettingsToFirestore();
                 }
             };
+
+
         /* =====================================
            出退勤
         ===================================== */
+
         async function handleClock(type) {
+
             const staffName =
                 document.getElementById(
                     "staffSelect"
                 ).value;
+
+
             if (!staffName) {
+
                 return alert(
                     "従業員を選ぶアル！"
                 );
             }
+
+
             const staffObj =
                 staffMembers.find(
-                    s => s.name === staffName
+                    s =>
+                        s.name ===
+                        staffName
                 );
+
+
             if (!staffObj) {
+
                 return alert(
                     "従業員データが見つからないアル！"
                 );
             }
+
+
             const enteredPin =
                 prompt(
                     `${staffName} さん、ロックナンバーを入力してください：`
                 );
+
+
             if (enteredPin === null) {
                 return;
             }
+
+
             const enteredHash =
                 await hashPin(
                     enteredPin
                 );
+
+
             if (
                 enteredHash !==
                 staffObj.pinHash
             ) {
+
                 return alert(
                     "ロックナンバーが違うアル！本人以外は打刻できないよ！"
                 );
             }
+
+
             let site = "";
+
+
             if (type === "in") {
+
                 site =
                     document.getElementById(
                         "siteSelect"
                     ).value;
-                if (site === "__OTHER__") {
+
+
+                if (
+                    site ===
+                    "__OTHER__"
+                ) {
+
                     site =
                         document.getElementById(
                             "customSiteName"
                         ).value
                         .trim();
+
+
                     if (!site) {
+
                         return alert(
                             "現場名を入力するアル！"
                         );
                     }
                 }
+
+
                 if (!site) {
+
                     return alert(
                         "現場名を選ぶか入力するアル！"
                     );
                 }
             }
+
+
             const msgEl =
                 document.getElementById(
                     "msg"
                 );
+
+
             msgEl.innerText =
                 "位置情報を取得中アル…";
+
+
             if (!navigator.geolocation) {
+
                 processClockAction(
                     type,
                     staffName,
                     site,
                     "位置情報非対応"
                 );
+
                 return;
             }
+
+
             navigator.geolocation.getCurrentPosition(
+
                 (position) => {
+
                     const lat =
                         position.coords.latitude;
+
+
                     const lng =
                         position.coords.longitude;
+
+
                     const locationStr =
                         `${lat.toFixed(5)}, ${lng.toFixed(5)}`;
+
+
                     processClockAction(
                         type,
                         staffName,
@@ -1644,11 +2510,16 @@ startRealtimeRecords();
                         locationStr
                     );
                 },
+
+
                 (error) => {
+
                     console.warn(
                         "位置情報取得エラー:",
                         error.message
                     );
+
+
                     processClockAction(
                         type,
                         staffName,
@@ -1656,183 +2527,280 @@ startRealtimeRecords();
                         "取得失敗(許可拒否等)"
                     );
                 },
+
+
                 {
-                    timeout: 10000,
-                    enableHighAccuracy: true
+                    timeout:
+                        10000,
+
+                    enableHighAccuracy:
+                        true
                 }
             );
         }
+
+
         /* =====================================
            打刻処理
         ===================================== */
+
         async function processClockAction(
             type,
             staff,
             site,
             locationStr
         ) {
+
             try {
+
                 const now =
                     new Date();
+
+
                 const month =
                     String(
                         now.getMonth() + 1
-                    ).padStart(2, "0");
+                    )
+                    .padStart(2, "0");
+
+
                 const day =
                     String(
                         now.getDate()
-                    ).padStart(2, "0");
+                    )
+                    .padStart(2, "0");
+
+
                 const hours =
                     String(
                         now.getHours()
-                    ).padStart(2, "0");
+                    )
+                    .padStart(2, "0");
+
+
                 const minutes =
                     String(
                         now.getMinutes()
-                    ).padStart(2, "0");
+                    )
+                    .padStart(2, "0");
+
+
                 const seconds =
                     String(
                         now.getSeconds()
-                    ).padStart(2, "0");
+                    )
+                    .padStart(2, "0");
+
+
                 const dateTimeStr =
                     `${month}/${day} ${hours}:${minutes}:${seconds}`;
+
+
                 const actionTypeStr =
                     type === "in"
                         ? "出勤"
                         : "退勤";
+
+
                 let targetSite =
                     site;
+
+
                 if (type === "in") {
+
                     await addDoc(
+
                         collection(
                             db,
                             "records"
                         ),
+
                         {
-                            staff: staff,
-                            site: site,
+                            staff:
+                                staff,
+
+                            site:
+                                site,
+
                             clockIn:
                                 dateTimeStr,
+
                             clockInLoc:
                                 locationStr,
+
                             clockOut:
                                 "-",
+
                             clockOutLoc:
                                 "-",
+
                             status:
                                 "勤務中",
+
                             timestamp:
                                 Date.now()
                         }
                     );
+
+
                     document
                         .getElementById(
                             "msg"
                         )
                         .innerText =
-                        `${staff} さん、出勤打刻したアル！ (${dateTimeStr})`;
+                            `${staff} さん、出勤打刻したアル！ (${dateTimeStr})`;
+
+
                 } else {
+
                     const target =
                         records.find(
                             r =>
-                                r.staff === staff &&
-                                r.status === "勤務中"
+                                r.staff ===
+                                    staff &&
+                                r.status ===
+                                    "勤務中"
                         );
+
+
                     if (!target) {
+
                         document
                             .getElementById(
                                 "msg"
                             )
                             .innerText = "";
+
+
                         return alert(
                             "該当する出勤記録が見つからないアル！"
                         );
                     }
+
+
                     targetSite =
                         target.site;
+
+
                     const recordRef =
                         doc(
                             db,
                             "records",
                             target.id
                         );
+
+
                     await updateDoc(
+
                         recordRef,
+
                         {
                             clockOut:
                                 dateTimeStr,
+
                             clockOutLoc:
                                 locationStr,
+
                             status:
                                 "退勤済み"
                         }
                     );
+
+
                     document
                         .getElementById(
                             "msg"
                         )
                         .innerText =
-                        `${staff} さん、退勤打刻したアル！ (${dateTimeStr})`;
+                            `${staff} さん、退勤打刻したアル！ (${dateTimeStr})`;
                 }
-                /*
-                 * 通知メール
-                 */
+
+
+                /* 通知メール */
+
                 if (notificationEmail) {
+
                     sendNotificationEmail(
                         notificationEmail,
                         {
-                            staff: staff,
+                            staff:
+                                staff,
+
                             type:
                                 actionTypeStr,
+
                             site:
                                 targetSite ||
                                 "不明",
+
                             time:
                                 dateTimeStr,
+
                             location:
                                 locationStr
                         }
                     );
                 }
+
+
             } catch (error) {
+
                 console.error(
                     "打刻処理エラー:",
                     error
                 );
+
+
                 alert(
                     "打刻処理に失敗しました。\n\n" +
                     error.message
                 );
             }
         }
+
+
         /* =====================================
            メール通知
         ===================================== */
+
         function sendNotificationEmail(
             toEmail,
             data
         ) {
+
             emailjs.send(
+
                 "service_dis5gyi",
+
                 "template_p2ghsr8",
+
                 {
                     to_email:
                         toEmail,
+
                     staff_name:
                         data.staff,
+
                     action_type:
                         data.type,
+
                     site_name:
                         data.site,
+
                     time:
                         data.time,
+
                     location:
                         data.location
                 }
+
             )
             .then(
+
                 () => {},
+
                 (err) => {
+
                     console.error(
                         "通知メール送信失敗:",
                         err
@@ -1840,150 +2808,261 @@ startRealtimeRecords();
                 }
             );
         }
+
+
         /* =====================================
            打刻表
         ===================================== */
+
         function renderTable() {
+
             const tbody =
                 document.getElementById(
                     "attendanceTable"
                 );
+
+
             if (!tbody) {
                 return;
             }
+
+
             tbody.innerHTML = "";
+
+
             const sortedRecords =
                 [...records].sort(
                     (a, b) =>
                         (b.timestamp || 0) -
                         (a.timestamp || 0)
                 );
+
+
             sortedRecords.forEach(
                 (r) => {
+
                     const badgeClass =
                         r.status === "勤務中"
                             ? "badge-working"
                             : "badge-done";
+
+
                     const tr =
                         document.createElement(
                             "tr"
                         );
+
+
                     /* 名前 */
+
                     const tdStaff =
                         document.createElement(
                             "td"
                         );
+
+
                     tdStaff.textContent =
                         r.staff || "-";
+
+
                     /* 現場 */
+
                     const tdSite =
                         document.createElement(
                             "td"
                         );
+
+
                     tdSite.textContent =
                         r.site || "-";
+
+
                     /* 出勤日時 */
+
                     const tdIn =
                         document.createElement(
                             "td"
                         );
+
+
                     tdIn.textContent =
                         r.clockIn || "-";
+
+
                     /* 状態 */
+
                     const tdStatus =
                         document.createElement(
                             "td"
                         );
+
+
                     const badge =
                         document.createElement(
                             "span"
                         );
+
+
                     badge.className =
                         badgeClass;
+
+
                     badge.textContent =
                         r.status || "-";
+
+
                     tdStatus.appendChild(
                         badge
                     );
+
+
                     /* 出勤位置 */
+
                     const tdInLoc =
                         document.createElement(
                             "td"
                         );
+
+
                     tdInLoc.innerHTML =
                         formatLocationCell(
                             r.clockInLoc
                         );
+
+
                     /* 退勤日時 */
+
                     const tdOut =
                         document.createElement(
                             "td"
                         );
+
+
                     tdOut.textContent =
                         r.clockOut || "-";
+
+
                     /* 退勤位置 */
+
                     const tdOutLoc =
                         document.createElement(
                             "td"
                         );
+
+
                     tdOutLoc.innerHTML =
                         formatLocationCell(
                             r.clockOutLoc
                         );
+
+
                     /* 操作 */
+
                     const tdAction =
                         document.createElement(
                             "td"
                         );
+
+
                     const deleteButton =
                         document.createElement(
                             "button"
                         );
+
+
                     deleteButton.className =
                         "btn-delete";
+
+
                     deleteButton.textContent =
                         "削除";
+
+
                     deleteButton.onclick =
-                        () => removeRecord(r.id);
+                        () =>
+                            removeRecord(
+                                r.id
+                            );
+
+
                     tdAction.appendChild(
                         deleteButton
                     );
-                    tr.appendChild(tdStaff);
-                    tr.appendChild(tdSite);
-                    tr.appendChild(tdIn);
-                    tr.appendChild(tdStatus);
-                    tr.appendChild(tdInLoc);
-                    tr.appendChild(tdOut);
-                    tr.appendChild(tdOutLoc);
-                    tr.appendChild(tdAction);
-                    tbody.appendChild(tr);
+
+
+                    tr.appendChild(
+                        tdStaff
+                    );
+
+                    tr.appendChild(
+                        tdSite
+                    );
+
+                    tr.appendChild(
+                        tdIn
+                    );
+
+                    tr.appendChild(
+                        tdStatus
+                    );
+
+                    tr.appendChild(
+                        tdInLoc
+                    );
+
+                    tr.appendChild(
+                        tdOut
+                    );
+
+                    tr.appendChild(
+                        tdOutLoc
+                    );
+
+                    tr.appendChild(
+                        tdAction
+                    );
+
+
+                    tbody.appendChild(
+                        tr
+                    );
                 }
             );
         }
+
+
         /* =====================================
            位置情報表示
         ===================================== */
+
         function formatLocationCell(
             locStr
         ) {
+
             if (
                 !locStr ||
                 locStr === "-" ||
                 locStr.includes("失敗") ||
                 locStr.includes("非対応")
             ) {
+
                 return escapeHtml(
                     locStr || "-"
                 );
             }
+
+
             /*
              * 緯度経度は
              * Google Mapsへのリンクとして表示
              */
+
             const safeLocation =
                 encodeURIComponent(
                     locStr
                 );
+
+
             return `
                 <a
                     href="https://maps.google.com/?q=${safeLocation}"
@@ -1995,25 +3074,55 @@ startRealtimeRecords();
                 </a>
             `;
         }
+
+
         /* =====================================
            HTMLエスケープ
         ===================================== */
+
         function escapeHtml(value) {
+
             return String(value)
-                .replace(/&/g, "&amp;")
-                .replace(/</g, "&lt;")
-                .replace(/>/g, "&gt;")
-                .replace(/"/g, "&quot;")
-                .replace(/'/g, "&#039;");
+
+                .replace(
+                    /&/g,
+                    "&amp;"
+                )
+
+                .replace(
+                    /</g,
+                    "&lt;"
+                )
+
+                .replace(
+                    />/g,
+                    "&gt;"
+                )
+
+                .replace(
+                    /"/g,
+                    "&quot;"
+                )
+
+                .replace(
+                    /'/g,
+                    "&#039;"
+                );
         }
+
+
         /* =====================================
            打刻1件削除
         ===================================== */
+
         window.removeRecord =
             async function(id) {
+
                 if (!await requireAdmin()) {
                     return;
                 }
+
+
                 if (
                     !confirm(
                         "この打刻データを削除するアルか？"
@@ -2021,37 +3130,55 @@ startRealtimeRecords();
                 ) {
                     return;
                 }
+
+
                 try {
+
                     await deleteDoc(
+
                         doc(
                             db,
                             "records",
                             id
                         )
                     );
+
+
                 } catch (error) {
+
                     console.error(
                         "打刻データ削除エラー:",
                         error
                     );
+
+
                     alert(
                         "打刻データの削除に失敗しました。\n\n" +
                         error.message
                     );
                 }
             };
+
+
         /* =====================================
            打刻データ全削除
         ===================================== */
+
         async function clearAllRecords() {
+
             if (!await requireAdmin()) {
                 return;
             }
+
+
             if (records.length === 0) {
+
                 return alert(
                     "削除するデータがないアル！"
                 );
             }
+
+
             if (
                 !confirm(
                     "【最終確認】すべての打刻データを一括削除するアルか？\n\n" +
@@ -2060,7 +3187,10 @@ startRealtimeRecords();
             ) {
                 return;
             }
+
+
             try {
+
                 const deletePromises =
                     records.map(
                         r =>
@@ -2072,150 +3202,256 @@ startRealtimeRecords();
                                 )
                             )
                     );
+
+
                 await Promise.all(
                     deletePromises
                 );
+
+
                 alert(
                     "すべての打刻データを一括削除したアル！"
                 );
+
+
             } catch (error) {
+
                 console.error(
                     "一括削除エラー:",
                     error
                 );
+
+
                 alert(
                     "一括削除に失敗しました。\n\n" +
                     error.message
                 );
             }
         }
+
+
         /* =====================================
            CSV出力
         ===================================== */
+
         function exportToCSV() {
+
             if (records.length === 0) {
+
                 return alert(
                     "出力するデータがないアル！"
                 );
             }
+
+
             if (!isAdminUser()) {
+
                 return alert(
                     "CSV出力は管理者ログイン後に利用できます。"
                 );
             }
+
+
             let csv =
                 "名前,現場名,出勤日時,状態,出勤位置,退勤日時,退勤位置\n";
+
+
             records.forEach(
                 r => {
+
                     const row = [
+
                         r.staff || "",
+
                         r.site || "",
+
                         r.clockIn || "",
+
                         r.status || "",
+
                         r.clockInLoc || "-",
+
                         r.clockOut || "",
+
                         r.clockOutLoc || "-"
+
                     ];
+
+
                     csv +=
+
                         row
+
                             .map(
                                 value =>
                                     `"${String(value)
-                                        .replace(/"/g, '""')}"`
+                                        .replace(
+                                            /"/g,
+                                            '""'
+                                        )}"`
                             )
-                            .join(",") +
+
+                            .join(",")
+
+                        +
+
                         "\n";
                 }
             );
+
+
             /*
              * Excelで文字化けしにくいよう
              * UTF-8 BOMを付ける
              */
+
             const blob =
                 new Blob(
-                    ["\uFEFF" + csv],
+
+                    [
+                        "\uFEFF" +
+                        csv
+                    ],
+
                     {
                         type:
                             "text/csv;charset=utf-8;"
                     }
                 );
+
+
             const url =
                 URL.createObjectURL(
                     blob
                 );
+
+
             const a =
                 document.createElement(
                     "a"
                 );
-            a.href = url;
+
+
+            a.href =
+                url;
+
+
             a.download =
                 "attendance.csv";
-            document.body.appendChild(a);
+
+
+            document.body.appendChild(
+                a
+            );
+
+
             a.click();
-            document.body.removeChild(a);
-            URL.revokeObjectURL(url);
+
+
+            document.body.removeChild(
+                a
+            );
+
+
+            URL.revokeObjectURL(
+                url
+            );
         }
+
     </script>
 </head>
+
+
 <body>
+
     <!-- =====================================
          起動ロック画面
     ====================================== -->
+
     <div id="appLockScreen">
+
         <div class="lock-box">
+
             <h2>
                 🔒 出退勤管理システム
             </h2>
+
             <p>
                 アクセスするには起動用ロックナンバーを入力してください
             </p>
+
             <input
                 type="password"
                 id="inputUnlockPin"
                 placeholder="****"
                 maxlength="8"
             >
+
             <button id="btnUnlockApp">
                 ロック解除
             </button>
+
             <div
                 id="lockErrorMsg"
                 class="lock-error">
             </div>
+
         </div>
+
     </div>
+
+
     <!-- =====================================
          従業員画面
     ====================================== -->
+
     <div
         id="employeePage"
-        class="card">
+        class="card"
+    >
+
         <h2 id="appTitleDisplay">
+
             出退勤表(仮)
+
             <span
                 id="syncStatus"
-                class="sync-badge">
+                class="sync-badge"
+            >
                 リアルタイム同期中
             </span>
+
         </h2>
+
+
         <div
             class="form-group"
-            style="margin-top: 14px;">
+            style="margin-top: 14px;"
+        >
+
             <label>
                 従業員を選択:
             </label>
-            <select
-                id="staffSelect">
+
+            <select id="staffSelect">
             </select>
+
         </div>
+
+
         <div class="form-group">
+
             <label>
                 現場名を選択:
             </label>
+
             <select
                 id="siteSelect"
-                onchange="window.toggleSiteInput()">
+                onchange="window.toggleSiteInput()"
+            >
             </select>
+
+
             <input
                 type="text"
                 id="customSiteName"
@@ -2225,20 +3461,33 @@ startRealtimeRecords();
                     margin-top: 8px;
                 "
             >
+
         </div>
+
+
         <div class="btn-group">
+
             <button
                 class="btn-start"
-                id="btnClockIn">
+                id="btnClockIn"
+            >
                 出勤
             </button>
+
+
             <button
                 class="btn-end"
-                id="btnClockOut">
+                id="btnClockOut"
+            >
                 退勤
             </button>
+
         </div>
+
+
         <p id="msg"></p>
+
+
         <hr
             style="
                 margin-top: 24px;
@@ -2246,15 +3495,22 @@ startRealtimeRecords();
                 border-top: 1px solid #e2e8f0;
             "
         >
+
+
         <button
             class="btn-lock"
-            id="btnOpenAdmin">
+            id="btnOpenAdmin"
+        >
             🔒 管理者画面へ
         </button>
+
     </div>
+
+
     <!-- =====================================
          管理者画面
     ====================================== -->
+
     <div
         id="adminPage"
         class="card"
@@ -2263,6 +3519,7 @@ startRealtimeRecords();
             border: 2px solid var(--primary);
         "
     >
+
         <div
             style="
                 display: flex;
@@ -2271,6 +3528,7 @@ startRealtimeRecords();
                 margin-bottom: 10px;
             "
         >
+
             <h2
                 style="
                     margin: 0;
@@ -2280,74 +3538,115 @@ startRealtimeRecords();
             >
                 管理者画面
             </h2>
+
+
             <button
                 class="btn-logout"
-                id="btnCloseAdmin">
+                id="btnCloseAdmin"
+            >
                 🔒 ログアウト
             </button>
+
         </div>
+
+
         <div class="admin-status">
             Firebase管理者アカウントでログイン中
         </div>
+
+
         <!-- 基本設定 -->
+
         <h3>
             基本設定
         </h3>
+
+
         <div class="form-group-flex">
+
             <input
                 type="text"
                 id="inputAppTitle"
                 value="出退勤表(仮)"
                 placeholder="アプリタイトル"
             >
+
+
             <button
                 class="btn-add"
-                id="btnUpdateTitle">
+                id="btnUpdateTitle"
+            >
                 保存
             </button>
+
         </div>
+
+
         <div class="form-group-flex">
+
             <input
                 type="email"
                 id="inputNotificationEmail"
                 placeholder="通知先メールアドレス"
             >
+
+
             <button
                 class="btn-add"
-                id="btnUpdateEmail">
+                id="btnUpdateEmail"
+            >
                 設定
             </button>
+
         </div>
+
+
         <!-- 起動PIN -->
+
         <div
             class="form-group"
             style="margin-bottom: 10px;"
         >
+
             <label>
                 起動時ロックナンバーの変更:
             </label>
+
+
             <div class="form-group-flex">
+
                 <input
                     type="password"
                     id="inputCurrentAppPin"
                     placeholder="現在の起動PIN"
                     maxlength="8"
                 >
+
+
                 <input
                     type="password"
                     id="inputNewAppPin"
                     placeholder="新しい起動PIN"
                     maxlength="8"
                 >
+
+
                 <button
                     class="btn-add"
-                    id="btnUpdateAppUnlockPin">
+                    id="btnUpdateAppUnlockPin"
+                >
                     変更
                 </button>
+
             </div>
+
         </div>
+
+
         <!-- 設定初期化 -->
+
         <div style="margin-top: 10px;">
+
             <button
                 class="btn-clear-all"
                 id="btnResetSettings"
@@ -2358,7 +3657,10 @@ startRealtimeRecords();
             >
                 🔄 設定を初期状態に戻す
             </button>
+
         </div>
+
+
         <hr
             style="
                 margin: 20px 0;
@@ -2366,59 +3668,92 @@ startRealtimeRecords();
                 border-top: 1px solid #e2e8f0;
             "
         >
+
+
         <!-- 打刻データ -->
+
         <h3>
             打刻データ一覧・一括操作
         </h3>
+
+
         <div
             style="margin-bottom: 12px;"
         >
+
             <button
                 class="btn-csv"
-                id="btnExportCSV">
+                id="btnExportCSV"
+            >
                 CSV出力
             </button>
+
+
             <button
                 class="btn-clear-all"
-                id="btnClearAllRecords">
+                id="btnClearAllRecords"
+            >
                 ⚠️ 打刻データを全削除
             </button>
+
         </div>
+
+
         <div class="table-container">
+
             <table>
+
                 <thead>
+
                     <tr>
+
                         <th>
                             名前
                         </th>
+
                         <th>
                             現場名
                         </th>
+
                         <th>
                             出勤日時
                         </th>
+
                         <th>
                             状態
                         </th>
+
                         <th>
                             出勤位置
                         </th>
+
                         <th>
                             退勤日時
                         </th>
+
                         <th>
                             退勤位置
                         </th>
+
                         <th>
                             操作
                         </th>
+
                     </tr>
+
                 </thead>
+
+
                 <tbody
-                    id="attendanceTable">
+                    id="attendanceTable"
+                >
                 </tbody>
+
             </table>
+
         </div>
+
+
         <hr
             style="
                 margin: 20px 0;
@@ -2426,26 +3761,37 @@ startRealtimeRecords();
                 border-top: 1px solid #e2e8f0;
             "
         >
+
+
         <!-- 従業員 -->
+
         <h3>
             従業員名簿の編集（ロックナンバー設定）
         </h3>
+
+
         <div
             class="form-group"
             style="margin-bottom: 8px;"
         >
+
             <input
                 type="text"
                 id="newStaffName"
                 placeholder="新しい従業員名"
                 style="margin-bottom: 8px;"
             >
+
+
             <input
                 type="text"
                 id="newStaffPin"
                 placeholder="従業員用ロックナンバー（例: 1234）"
             >
+
         </div>
+
+
         <button
             class="btn-add"
             id="btnAddStaff"
@@ -2457,30 +3803,48 @@ startRealtimeRecords();
         >
             従業員を追加
         </button>
+
+
         <ul
             id="staffListDisplay"
-            class="staff-list">
+            class="staff-list"
+        >
         </ul>
+
+
         <!-- 現場 -->
+
         <h3>
             現場一覧の編集
         </h3>
+
+
         <div class="form-group-flex">
+
             <input
                 type="text"
                 id="newSiteName"
                 placeholder="新しい現場名"
             >
+
+
             <button
                 class="btn-add"
-                id="btnAddSite">
+                id="btnAddSite"
+            >
                 追加
             </button>
+
         </div>
+
+
         <ul
             id="siteListDisplay"
-            class="staff-list">
+            class="staff-list"
+        >
         </ul>
+
     </div>
+
 </body>
 </html>
