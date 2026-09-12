@@ -182,9 +182,16 @@
     <script type="module">  
       import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";  
       import { getFirestore, collection, addDoc, getDocs, deleteDoc, doc, updateDoc, onSnapshot, setDoc, getDoc } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";  
-      import { getAuth, signInAnonymously } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
+      import {
+  getAuth,
+  signInAnonymously,
+  signInWithEmailAndPassword,
+  signOut,
+  onAuthStateChanged
+} from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
+const ADMIN_UID = "Cvx67XLdEBMMUb9MSfpcDkUqfZD2";
 
-      const firebaseConfig = {  
+const firebaseConfig = {  
         apiKey: "AIzaSyDxVOTA6qpXn4_mPWyiqvINgjb1_k2Jeh8",   
         authDomain: "work-stamp-app.firebaseapp.com",  
         projectId: "work-stamp-app",  
@@ -208,7 +215,7 @@
       }  
 
       let appUnlockPinHash = "";   
-      let adminPinHash = "";       
+
       let notificationEmail = "";  
       let staffMembers = [];  
       let siteMembers = ["現場A", "現場B"];  
@@ -218,13 +225,24 @@
 // 匿名認証の実行
 async function initAuth() {
   try {
+    const existingUser = await new Promise((resolve) => {
+      const unsubscribe = onAuthStateChanged(auth, (user) => {
+        unsubscribe();
+        resolve(user);
+      });
+    });
+
+    if (existingUser) {
+      console.log("既存の認証状態を確認:", existingUser.uid);
+      return true;
+    }
+
     const result = await signInAnonymously(auth);
-
     console.log("匿名認証OK:", result.user.uid);
-
     return true;
+
   } catch (error) {
-    console.error("匿名認証失敗");
+    console.error("認証失敗");
     console.error("error.code =", error.code);
     console.error("error.message =", error.message);
 
@@ -237,7 +255,6 @@ async function initAuth() {
     return false;
   }
 }
-
       window.onload = async function() {
   const authSuccess = await initAuth();
 
@@ -269,64 +286,30 @@ async function initAuth() {
         document.getElementById('btnUpdateAdminPin').onclick = updateAdminPin;  
       };  
 
-      async function initFirebaseData() {  
-        const settingsRef = doc(db, "settings", "config");  
-        const settingsSnap = await getDoc(settingsRef);  
-          
-        const defaultAppUnlockHash = await hashPin("1234");  
-        const defaultAdminHash = await hashPin("5678");   
-        const defaultStaff = [  
-          { name: "山田 太郎", pinHash: await hashPin("1111") },  
-          { name: "佐藤 花子", pinHash: await hashPin("2222") }  
-        ];  
+      
+  } else {
 
-        if (settingsSnap.exists()) {  
-          const data = settingsSnap.data();  
-          appUnlockPinHash = data.appUnlockPinHash || data.adminPinHash || defaultAppUnlockHash;  
-          adminPinHash = data.adminPinHash || defaultAdminHash;  
-            
-          appTitle = data.appTitle || "出退勤表(仮)";  
-          notificationEmail = data.notificationEmail || "";  
-          siteMembers = data.siteMembers || ["現場A", "現場B"];  
-            
-          if (data.staffMembers && data.staffMembers.length > 0) {  
-            staffMembers = await Promise.all(data.staffMembers.map(async (staff) => {  
-              let pHash = staff.pinHash;  
-              if (!pHash && staff.pin) pHash = await hashPin(staff.pin);  
-              if (!pHash) {  
-                if (staff.name === "山田 太郎") pHash = await hashPin("1111");  
-                else if (staff.name === "佐藤 花子") pHash = await hashPin("2222");  
-                else pHash = await hashPin("0000");  
-              }  
-              return { name: staff.name, pinHash: pHash };  
-            }));  
-          } else {  
-            staffMembers = defaultStaff;  
-          }  
-        } else {  
-          appUnlockPinHash = defaultAppUnlockHash;  
-          adminPinHash = defaultAdminHash;  
-          staffMembers = defaultStaff;  
-          await setDoc(settingsRef, {  
-            appUnlockPinHash: appUnlockPinHash,  
-            adminPinHash: adminPinHash,  
-            appTitle: appTitle,  
-            notificationEmail: notificationEmail,  
-            staffMembers: staffMembers,  
-            siteMembers: siteMembers  
-          });  
-        }  
-          
-        updateUI();  
+    appUnlockPinHash = defaultAppUnlockHash;
+    staffMembers = defaultStaff;
 
-        onSnapshot(collection(db, "records"), (snapshot) => {  
-          records = [];  
-          snapshot.forEach((docSnap) => {  
-            records.push({ id: docSnap.id, ...docSnap.data() });  
-          });  
-          renderTable();  
-        });  
-      }  
+    // 初回設定は管理者ログイン後に保存する
+  }
+
+  updateUI();
+
+  onSnapshot(collection(db, "records"), (snapshot) => {
+    records = [];
+
+    snapshot.forEach((docSnap) => {
+      records.push({
+        id: docSnap.id,
+        ...docSnap.data()
+      });
+    });
+
+    renderTable();
+  });
+      } 
 
       async function verifyAppUnlock() {  
         const pin = document.getElementById('inputUnlockPin').value.trim();  
@@ -360,25 +343,29 @@ async function initAuth() {
         updateUI();  
       }  
 
-      async function resetSettingsToDefault() {  
-        const pin = prompt("【確認】設定を初期化するため、管理者ロックナンバーを入力してください：");  
-        if (pin === null) return;  
-        const enteredHash = await hashPin(pin);  
-        if (enteredHash !== adminPinHash) {  
-          return alert("管理者ロックナンバーが違うアル！");  
-        }  
+    async function resetSettingsToDefault() {
+  if (!await requireAdmin()) return;
 
-        if (!confirm("設定（スタッフのPINや現場リスト）を初期状態にリセットするアルか？")) return;  
-        appUnlockPinHash = await hashPin("1234");  
-        adminPinHash = await hashPin("5678");  
-        staffMembers = [  
-          { name: "山田 太郎", pinHash: await hashPin("1111") },  
-          { name: "佐藤 花子", pinHash: await hashPin("2222") }  
-        ];  
-        siteMembers = ["現場A", "現場B"];  
-        await saveSettingsToFirestore();  
-        alert("設定を初期状態にリセットしたアル！起動用PINは「1234」、管理者用PINは「5678」に戻ったよ！");  
-      }  
+  if (!confirm("設定を初期化するアル？\nスタッフのPINや現場リストも初期状態に戻ります。")) {
+    return;
+  }
+
+  appUnlockPinHash = await hashPin("1234");
+
+  staffMembers = [
+    { name: "山田 太郎", pinHash: await hashPin("1111") },
+    { name: "佐藤 花子", pinHash: await hashPin("2222") }
+  ];
+
+  siteMembers = ["現場A", "現場B"];
+
+  appTitle = "出退勤表(仮)";
+  notificationEmail = "";
+
+  await saveSettingsToFirestore();
+
+  alert("設定を初期化したアル！");
+}
 
       function updateUI() {  
         document.getElementById('appTitleDisplay').childNodes[0].nodeValue = appTitle + " ";  
@@ -409,24 +396,7 @@ async function initAuth() {
         alert("起動時ロックナンバーを変更したアル！");  
       };  
 
-      window.updateAdminPin = async function() {  
-        const currentPin = document.getElementById('inputCurrentAdminPin').value.trim();  
-        const newPin = document.getElementById('inputNewAdminPin').value.trim();  
-          
-        if (!currentPin) return alert("現在の管理者ロックナンバーを入力するアル！");  
-        if (!newPin) return alert("新しい管理者ロックナンバーを入力するアル！");  
-
-        const enteredHash = await hashPin(currentPin);  
-        if (enteredHash !== adminPinHash) {  
-          return alert("現在の管理者ロックナンバーが違います！");  
-        }  
-
-        adminPinHash = await hashPin(newPin);  
-        await saveSettingsToFirestore();  
-        document.getElementById('inputCurrentAdminPin').value = '';  
-        document.getElementById('inputNewAdminPin').value = '';  
-        alert("管理者ロックナンバーを変更したアル！");  
-      };  
+      
 
       window.updateTitle = async function() {  
         const newTitle = document.getElementById('inputAppTitle').value.trim();  
@@ -443,16 +413,38 @@ async function initAuth() {
         alert("通知先メールアドレスを保存したアル！");  
       };  
 
-      window.openAdminPage = async function() {  
-        const pin = prompt("管理者ロックナンバーを入力するアル：");  
-        if (pin === null) return;  
-        const enteredHash = await hashPin(pin);  
-        if (enteredHash === adminPinHash) {  
-          document.getElementById('adminPage').style.display = 'block';  
-        } else {  
-          alert("管理者ロックナンバーが違うアル！");  
-        }  
-      };  
+      window.openAdminPage = async function() {
+  const email = prompt("管理者のメールアドレスを入力してください：");
+  if (email === null) return;
+
+  const password = prompt("管理者のパスワードを入力してください：");
+  if (password === null) return;
+
+  try {
+    const result = await signInWithEmailAndPassword(
+      auth,
+      email.trim(),
+      password
+    );
+
+    if (result.user.uid !== ADMIN_UID) {
+      await signOut(auth);
+      await signInAnonymously(auth);
+      alert("このアカウントは管理者として登録されていません。");
+      return;
+    }
+
+    console.log("管理者ログインOK:", result.user.uid);
+    document.getElementById('adminPage').style.display = 'block';
+
+  } catch (error) {
+    console.error("管理者ログイン失敗:", error.code, error.message);
+    alert(
+      "管理者ログインに失敗しました。\n\n" +
+      "エラーコード: " + error.code
+    );
+  }
+};
 
       window.closeAdminPage = function() {  
         document.getElementById('adminPage').style.display = 'none';  
