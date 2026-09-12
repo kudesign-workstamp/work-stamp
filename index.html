@@ -1064,12 +1064,10 @@ startRealtimeRecords();
                     stopRealtimeRecords();
 
                     /*
-                     * 現在の匿名ユーザーをいったん終了
-                     */
-                    await signOut(auth);
-                    /*
-                     * Firebase Authenticationで
-                     * メール＋パスワードログイン
+                     * 匿名ユーザーを先にsignOutしない。
+                     * signInWithEmailAndPassword() が
+                     * 認証ユーザーを切り替えるため、
+                     * 途中で auth.currentUser が null になる時間を作らない。
                      */
                     const result =
                         await signInWithEmailAndPassword(
@@ -1138,10 +1136,21 @@ startRealtimeRecords();
                             anonymousError
                         );
                     }
+                    const errorCode =
+                        error && error.code
+                            ? error.code
+                            : "unknown";
+                    const errorMessage =
+                        error && error.message
+                            ? error.message
+                            : String(error);
                     alert(
                         "管理者ログインに失敗しました。\n\n" +
                         "エラーコード: " +
-                        error.code
+                        errorCode +
+                        "\n" +
+                        "内容: " +
+                        errorMessage
                     );
                 }
             };
