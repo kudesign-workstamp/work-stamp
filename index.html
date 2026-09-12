@@ -394,6 +394,7 @@
             setDoc,
             getDoc,
             getDocs,
+            runTransaction,
             query,
             where
         } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
@@ -936,7 +937,10 @@ onSnapshot(
         if (msgEl) {
 
             msgEl.innerText =
-                "⚠️ リアルタイム同期エラー";
+                "⚠️ リアルタイム同期エラー" +
+                (error && error.code
+                    ? `（${error.code}）`
+                    : "");
 
         }
     }
@@ -2394,10 +2398,9 @@ onSnapshot(
                 if (type === "in") {
 
                     /*
-                     * 画面側の records はリアルタイム同期の途中だと
-                     * 最新状態ではない場合があるため、
-                     * 出勤直前にFirestoreへ直接確認するアル！
-                     * これで「連打」や「同期前の2回目」も防ぐヨ！
+                     * 出勤の重複防止。
+                     * Transactionで「確認→登録」を一体化するアル！
+                     * 連打や同時実行でも勤務中レコードを重複させないヨ！
                      */
                     const workingQuery = query(
                         collection(db, "records"),
@@ -2405,60 +2408,31 @@ onSnapshot(
                         where("status", "==", "勤務中")
                     );
 
-                    const workingSnapshot =
-                        await getDocs(workingQuery);
+                    await runTransaction(db, async (transaction) => {
+                        const workingSnapshot =
+                            await transaction.get(workingQuery);
 
-                    if (!workingSnapshot.empty) {
-
-                        document
-                            .getElementById(
-                                "msg"
-                            )
-                            .innerText = "";
-
-                        return alert(
-                            `${staff}さんは、もう出勤してるアル！\n先に退勤打刻してから、もう一度出勤するヨ！`
-                        );
-                    }
-
-
-                    await addDoc(
-                        collection(
-                            db,
-                            "records"
-                        ),
-                        {
-
-                            staff: staff,
-
-                            site: site,
-
-                            clockIn:
-                                dateTimeStr,
-
-                            clockInLoc:
-                                locationStr,
-
-                            clockOut:
-                                "-",
-
-                            clockOutLoc:
-                                "-",
-
-                            status:
-                                "勤務中",
-
-                            timestamp:
-                                Date.now()
-
+                        if (!workingSnapshot.empty) {
+                            throw new Error("ALREADY_WORKING");
                         }
-                    );
 
+                        const newRecordRef =
+                            doc(collection(db, "records"));
+
+                        transaction.set(newRecordRef, {
+                            staff: staff,
+                            site: site,
+                            clockIn: dateTimeStr,
+                            clockInLoc: locationStr,
+                            clockOut: "-",
+                            clockOutLoc: "-",
+                            status: "勤務中",
+                            timestamp: Date.now()
+                        });
+                    });
 
                     document
-                        .getElementById(
-                            "msg"
-                        )
+                        .getElementById("msg")
                         .innerText =
                         `${staff} さん、出勤打刻したアル！ (${dateTimeStr})`;
 
@@ -2563,9 +2537,25 @@ onSnapshot(
                     error
                 );
 
+                if (error && error.message === "ALREADY_WORKING") {
+                    document
+                        .getElementById("msg")
+                        .innerText = "";
+
+                    return alert(
+                        `${staff}さんは、もう出勤してるアル！
+先に退勤打刻してから、もう一度出勤するヨ！`
+                    );
+                }
 
                 alert(
-                    "打刻処理に失敗しました。\n\n" +
+                    "打刻処理に失敗しました。
+
+" +
+                    (error.code
+                        ? "エラーコード: " + error.code + "
+"
+                        : "") +
                     error.message
                 );
             }
