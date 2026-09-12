@@ -930,12 +930,11 @@ onSnapshot(
         const msgEl =
             document.getElementById("msg");
 
-        if (msgEl) {
-
-            msgEl.innerText =
-                "⚠️ リアルタイム同期エラー";
-
-        }
+       if (msgEl) {
+    msgEl.innerText =
+        "⚠️ リアルタイム同期エラー：" +
+        error.code;
+}
     }
 );
 
