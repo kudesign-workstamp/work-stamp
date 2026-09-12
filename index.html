@@ -394,7 +394,6 @@
             setDoc,
             getDoc,
             getDocs,
-            runTransaction,
             query,
             where
         } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
@@ -467,7 +466,9 @@
            アプリデータ
         ===================================== */
 
-        let appUnlockPinHash = "";
+        // 起動ロックはFirebase通信より先に使えるよう、
+        // 初期値をあらかじめ設定しておくアル！
+        let appUnlockPinHash = "03ac674216f3e15c761ee1a5e255f067953623c8b388b4459e13f978d7c846f4";
 
         let notificationEmail = "";
 
@@ -610,6 +611,30 @@
 
         window.onload = async function() {
 
+            /*
+             * 重要：起動ロックのイベントは最初に登録するアル！
+             * Firebase/Firestoreの読み込みで一時的にエラーになっても、
+             * ロック画面から先へ進めなくなることを防ぐヨ！
+             */
+            const unlockBtn =
+                document.getElementById("btnUnlockApp");
+
+            const unlockInput =
+                document.getElementById("inputUnlockPin");
+
+            if (unlockBtn) {
+                unlockBtn.onclick = verifyAppUnlock;
+            }
+
+            if (unlockInput) {
+                unlockInput.onkeypress = (e) => {
+                    if (e.key === "Enter") {
+                        verifyAppUnlock();
+                    }
+                };
+            }
+
+            /* Firebase認証 */
             const authSuccess =
                 await initAuth();
 
@@ -617,27 +642,8 @@
                 return;
             }
 
-
+            /* Firebaseデータは失敗してもロック操作を止めない */
             await initFirebaseData();
-
-
-            /* 起動ロック */
-
-            document
-                .getElementById("btnUnlockApp")
-                .onclick = verifyAppUnlock;
-
-
-            document
-                .getElementById("inputUnlockPin")
-                .onkeypress = (e) => {
-
-                    if (e.key === "Enter") {
-                        verifyAppUnlock();
-                    }
-
-                };
-
 
             /* 出退勤 */
 
@@ -711,6 +717,27 @@
 
         async function initFirebaseData() {
 
+            /* まずローカル初期値を確保するアル！ */
+            const defaultAppUnlockHash =
+                "03ac674216f3e15c761ee1a5e255f067953623c8b388b4459e13f978d7c846f4";
+
+            const defaultStaff = [
+                {
+                    name: "山田 太郎",
+                    pinHash: "0ffe1abd1a08215353c233d6e009613e95eec4253832a761af28ff37ac5a150c"
+                },
+                {
+                    name: "佐藤 花子",
+                    pinHash: "edee29f882543b956620b26d0ee0e7e950399b1c4222f5de05e06425b4c995e9"
+                }
+            ];
+
+            appUnlockPinHash = defaultAppUnlockHash;
+            staffMembers = defaultStaff;
+            siteMembers = ["現場A", "現場B"];
+            appTitle = "出退勤表(仮)";
+            notificationEmail = "";
+
             try {
 
                 const settingsRef =
@@ -724,24 +751,6 @@
                 const settingsSnap =
                     await getDoc(settingsRef);
 
-
-                const defaultAppUnlockHash =
-                    await hashPin("1234");
-
-
-                const defaultStaff = [
-
-                    {
-                        name: "山田 太郎",
-                        pinHash: await hashPin("1111")
-                    },
-
-                    {
-                        name: "佐藤 花子",
-                        pinHash: await hashPin("2222")
-                    }
-
-                ];
 
 
                 if (settingsSnap.exists()) {
@@ -907,6 +916,13 @@ onSnapshot(
 
         records = [];
 
+        const syncStatus =
+            document.getElementById("syncStatus");
+
+        if (syncStatus) {
+            syncStatus.innerText = "リアルタイム同期中";
+        }
+
         snapshot.forEach(
             (docSnap) => {
 
@@ -931,17 +947,11 @@ onSnapshot(
             error
         );
 
-        const msgEl =
-            document.getElementById("msg");
+        const syncStatus =
+            document.getElementById("syncStatus");
 
-        if (msgEl) {
-
-            msgEl.innerText =
-                "⚠️ リアルタイム同期エラー" +
-                (error && error.code
-                    ? `（${error.code}）`
-                    : "");
-
+        if (syncStatus) {
+            syncStatus.innerText = "⚠️ 同期エラー";
         }
     }
 );
@@ -2398,9 +2408,10 @@ onSnapshot(
                 if (type === "in") {
 
                     /*
-                     * 出勤の重複防止。
-                     * Transactionで「確認→登録」を一体化するアル！
-                     * 連打や同時実行でも勤務中レコードを重複させないヨ！
+                     * 画面側の records はリアルタイム同期の途中だと
+                     * 最新状態ではない場合があるため、
+                     * 出勤直前にFirestoreへ直接確認するアル！
+                     * これで「連打」や「同期前の2回目」も防ぐヨ！
                      */
                     const workingQuery = query(
                         collection(db, "records"),
@@ -2408,44 +2419,91 @@ onSnapshot(
                         where("status", "==", "勤務中")
                     );
 
-                    await runTransaction(db, async (transaction) => {
-                        const workingSnapshot =
-                            await transaction.get(workingQuery);
+                    const workingSnapshot =
+                        await getDocs(workingQuery);
 
-                        if (!workingSnapshot.empty) {
-                            throw new Error("ALREADY_WORKING");
-                        }
+                    if (!workingSnapshot.empty) {
 
-                        const newRecordRef =
-                            doc(collection(db, "records"));
+                        document
+                            .getElementById(
+                                "msg"
+                            )
+                            .innerText = "";
 
-                        transaction.set(newRecordRef, {
+                        return alert(
+                            `${staff}さんは、もう出勤してるアル！\n先に退勤打刻してから、もう一度出勤するヨ！`
+                        );
+                    }
+
+
+                    await addDoc(
+                        collection(
+                            db,
+                            "records"
+                        ),
+                        {
+
                             staff: staff,
+
                             site: site,
-                            clockIn: dateTimeStr,
-                            clockInLoc: locationStr,
-                            clockOut: "-",
-                            clockOutLoc: "-",
-                            status: "勤務中",
-                            timestamp: Date.now()
-                        });
-                    });
+
+                            clockIn:
+                                dateTimeStr,
+
+                            clockInLoc:
+                                locationStr,
+
+                            clockOut:
+                                "-",
+
+                            clockOutLoc:
+                                "-",
+
+                            status:
+                                "勤務中",
+
+                            timestamp:
+                                Date.now()
+
+                        }
+                    );
+
 
                     document
-                        .getElementById("msg")
+                        .getElementById(
+                            "msg"
+                        )
                         .innerText =
                         `${staff} さん、出勤打刻したアル！ (${dateTimeStr})`;
 
 
                 } else {
 
-                    const target =
-                        records.find(
-                            r =>
-                                r.staff === staff &&
-                                r.status === "勤務中"
-                        );
+                    /*
+                     * 退勤も画面のrecordsだけに頼らず、
+                     * Firestoreを直接確認するアル！
+                     * リアルタイム同期が一時的に遅れていても正しく判定するヨ！
+                     */
+                    const workingQuery = query(
+                        collection(db, "records"),
+                        where("staff", "==", staff),
+                        where("status", "==", "勤務中")
+                    );
 
+                    const workingSnapshot =
+                        await getDocs(workingQuery);
+
+                    const targetDoc =
+                        workingSnapshot.empty
+                            ? null
+                            : workingSnapshot.docs[0];
+
+                    const target = targetDoc
+                        ? {
+                            id: targetDoc.id,
+                            ...targetDoc.data()
+                        }
+                        : null;
 
                     if (!target) {
 
@@ -2537,25 +2595,9 @@ onSnapshot(
                     error
                 );
 
-                if (error && error.message === "ALREADY_WORKING") {
-                    document
-                        .getElementById("msg")
-                        .innerText = "";
-
-                    return alert(
-                        `${staff}さんは、もう出勤してるアル！
-先に退勤打刻してから、もう一度出勤するヨ！`
-                    );
-                }
 
                 alert(
-                    "打刻処理に失敗しました。
-
-" +
-                    (error.code
-                        ? "エラーコード: " + error.code + "
-"
-                        : "") +
+                    "打刻処理に失敗しました。\n\n" +
                     error.message
                 );
             }
