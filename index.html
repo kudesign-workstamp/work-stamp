@@ -1581,6 +1581,9 @@ onSnapshot(
                         auth
                     );
 
+                    /* 匿名ユーザー用のrecords監視を張り直すアル！ */
+                    startRecordsListener();
+
 
                     console.log(
                         "管理者ログアウト → 匿名認証"
