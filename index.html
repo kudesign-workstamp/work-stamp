@@ -308,7 +308,6 @@ async function requireAdmin(){
 
 /* =====================================
    Firestoreリアルタイム監視
-   ※ initFirebaseData の外に置いているのが重要
 ===================================== */
 
 let recordsUnsubscribe=null;
@@ -449,7 +448,6 @@ window.onload=async function(){
 
     await initFirebaseData();
 
-    /* ここでリアルタイム監視を開始 */
     startRecordsListener();
 
     document.getElementById("btnClockIn").onclick=()=>handleClock("in");
@@ -852,6 +850,14 @@ function renderStaffOptions(){
     const currentVal=select.value;
     select.innerHTML="";
 
+    // 初期プレースホルダー
+    const defaultOption=document.createElement("option");
+    defaultOption.value="";
+    defaultOption.textContent="ー従業員を選択ー";
+    defaultOption.disabled=true;
+    defaultOption.selected=true;
+    select.appendChild(defaultOption);
+
     staffMembers.forEach(staff=>{
         const option=document.createElement("option");
         option.value=staff.name;
@@ -959,6 +965,14 @@ function renderSiteOptions(){
 
     const currentVal=select.value;
     select.innerHTML="";
+
+    // 初期プレースホルダー
+    const defaultOption=document.createElement("option");
+    defaultOption.value="";
+    defaultOption.textContent="ー現場名を選択ー";
+    defaultOption.disabled=true;
+    defaultOption.selected=true;
+    select.appendChild(defaultOption);
 
     siteMembers.forEach(site=>{
         const option=document.createElement("option");
@@ -1071,6 +1085,20 @@ async function handleClock(type){
 
     if(!staffObj)return alert("従業員データが見つからないアル！");
 
+    let site="";
+
+    if(type==="in"){
+        site=document.getElementById("siteSelect").value;
+
+        if(!site)return alert("現場名を選ぶか入力するアル！");
+
+        if(site==="__OTHER__"){
+            site=document.getElementById("customSiteName").value.trim();
+
+            if(!site)return alert("現場名を入力するアル！");
+        }
+    }
+
     const enteredPin=prompt(
         `${staffName} さん、ロックナンバーを入力してください：`
     );
@@ -1083,20 +1111,6 @@ async function handleClock(type){
         return alert(
             "ロックナンバーが違うアル！本人以外は打刻できないヨ！"
         );
-    }
-
-    let site="";
-
-    if(type==="in"){
-        site=document.getElementById("siteSelect").value;
-
-        if(site==="__OTHER__"){
-            site=document.getElementById("customSiteName").value.trim();
-
-            if(!site)return alert("現場名を入力するアル！");
-        }
-
-        if(!site)return alert("現場名を選ぶか入力するアル！");
     }
 
     const msgEl=document.getElementById("msg");
